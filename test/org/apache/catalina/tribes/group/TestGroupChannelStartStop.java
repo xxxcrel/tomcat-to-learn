@@ -16,8 +16,9 @@
  */
 package org.apache.catalina.tribes.group;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,7 +31,6 @@ import org.apache.catalina.tribes.transport.ReceiverBase;
  */
 public class TestGroupChannelStartStop {
     private GroupChannel channel = null;
-    private int udpPort = 45543;
 
     @Before
     public void setUp() throws Exception {
@@ -39,11 +39,7 @@ public class TestGroupChannelStartStop {
 
     @After
     public void tearDown() throws Exception {
-        try {
-            channel.stop(Channel.DEFAULT);
-        } catch (Exception ignore) {
-            // Ignore
-        }
+        try {channel.stop(Channel.DEFAULT);}catch (Exception ignore){ /* Ignore */ }
     }
 
     @Test
@@ -57,7 +53,7 @@ public class TestGroupChannelStartStop {
             channel.start(Channel.DEFAULT);
             count++;
         } catch ( Exception x){x.printStackTrace();}
-        Assert.assertEquals(count,2);
+        assertEquals(count,2);
         channel.stop(Channel.DEFAULT);
     }
 
@@ -79,10 +75,8 @@ public class TestGroupChannelStartStop {
         try {
             channel.start(Channel.MBR_RX_SEQ);
             count++;
-        } catch ( Exception x){
-            // expected
-        }
-        Assert.assertEquals(count,1);
+        } catch ( Exception x){/*expected*/}
+        assertEquals(count,1);
         channel.stop(Channel.DEFAULT);
         //double the membership sender
         count = 0;
@@ -94,10 +88,8 @@ public class TestGroupChannelStartStop {
         try {
             channel.start(Channel.MBR_TX_SEQ);
             count++;
-        } catch ( Exception x){
-            // expected
-        }
-        Assert.assertEquals(count,1);
+        } catch ( Exception x){/*expected*/}
+        assertEquals(count,1);
         channel.stop(Channel.DEFAULT);
 
         count = 0;
@@ -108,10 +100,8 @@ public class TestGroupChannelStartStop {
         try {
             channel.start(Channel.SND_RX_SEQ);
             count++;
-        } catch ( Exception x){
-            // expected
-        }
-        Assert.assertEquals(count,1);
+        } catch ( Exception x){/*expected*/}
+        assertEquals(count,1);
         channel.stop(Channel.DEFAULT);
 
         count = 0;
@@ -122,10 +112,8 @@ public class TestGroupChannelStartStop {
         try {
             channel.start(Channel.SND_TX_SEQ);
             count++;
-        } catch ( Exception x){
-            // expected
-        }
-        Assert.assertEquals(count,1);
+        } catch ( Exception x){/*expected*/}
+        assertEquals(count,1);
         channel.stop(Channel.DEFAULT);
     }
 
@@ -140,19 +128,9 @@ public class TestGroupChannelStartStop {
         try {
             channel.start(flag);
             count++;
-        } catch ( Exception x){
-            // expected
-        }
-        Assert.assertEquals(count,2);
+        } catch ( Exception x){/*expected*/}
+        assertEquals(count,2);
         channel.stop(Channel.DEFAULT);
     }
 
-    @Test
-    public void testUdpReceiverStart() throws Exception {
-        ReceiverBase rb = (ReceiverBase)channel.getChannelReceiver();
-        rb.setUdpPort(udpPort);
-        channel.start(Channel.DEFAULT);
-        Thread.sleep(1000);
-        channel.stop(Channel.DEFAULT);
-    }
 }

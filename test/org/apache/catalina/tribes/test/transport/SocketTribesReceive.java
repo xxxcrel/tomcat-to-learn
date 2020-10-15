@@ -16,12 +16,11 @@
  */
 package org.apache.catalina.tribes.test.transport;
 
-import java.io.InputStream;
-import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.io.InputStream;
 import java.text.DecimalFormat;
-
+import java.math.BigDecimal;
 import org.apache.catalina.tribes.io.XByteBuffer;
 
 public class SocketTribesReceive {
@@ -35,10 +34,10 @@ public class SocketTribesReceive {
     static BigDecimal total = new BigDecimal((double)0);
     static BigDecimal bytes = new BigDecimal((double)32871);
 
-
+    
     public static void main(String[] args) throws Exception {
         int size = 43800;
-        if (args.length > 0 ) try {size=Integer.parseInt(args[0]);}catch(Exception x){ /* Ignore */ }
+        if (args.length > 0 ) try {size=Integer.parseInt(args[0]);}catch(Exception x){}
         XByteBuffer xbuf = new XByteBuffer(43800,true);
         ServerSocket srvSocket = new ServerSocket(9999);
         System.out.println("Listening on 9999");
@@ -46,13 +45,12 @@ public class SocketTribesReceive {
         socket.setReceiveBufferSize(size);
         InputStream in = socket.getInputStream();
         Thread t = new Thread() {
-            @Override
             public void run() {
                 while ( true ) {
                     try {
                         Thread.sleep(1000);
                         printStats(start, mb, count, df, total);
-                    }catch ( Exception x ) { /* Ignore */ }
+                    }catch ( Exception x ) {}
                 }
             }
         };
@@ -78,7 +76,7 @@ public class SocketTribesReceive {
                 printStats(start, mb, count, df, total);
             }
         }
-
+        
     }
 
     private static void printStats(long start, double mb, int count, DecimalFormat df, BigDecimal total) {

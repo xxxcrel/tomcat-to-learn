@@ -22,8 +22,9 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.Assert.fail;
+
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,8 +52,8 @@ public class TestGroupChannelSenderConnections extends LoggingBaseTest {
             channels[i].addChannelListener(listeners[i]);
         }
         TesterUtil.addRandomDomain(channels);
-        for (ManagedChannel channel : channels) {
-            channel.start(Channel.SND_RX_SEQ | Channel.SND_TX_SEQ);
+        for (int i = 0; i < channels.length; i++) {
+            channels[i].start(Channel.SND_RX_SEQ|Channel.SND_TX_SEQ);
         }
     }
 
@@ -78,7 +79,7 @@ public class TestGroupChannelSenderConnections extends LoggingBaseTest {
         while ((countReceived = getReceivedMessageCount()) != n) {
             long time = System.currentTimeMillis();
             if ((time - startTime) > sleep) {
-                Assert.fail("Only " + countReceived + " out of " + n
+                fail("Only " + countReceived + " out of " + n
                         + " messages have been received in " + (sleep / 1000)
                         + " seconds");
                 break;
@@ -116,8 +117,8 @@ public class TestGroupChannelSenderConnections extends LoggingBaseTest {
     @Override
     public void tearDown() throws Exception {
         try {
-            for (ManagedChannel channel : channels) {
-                channel.stop(Channel.DEFAULT);
+            for (int i = 0; i < channels.length; i++) {
+                channels[i].stop(Channel.DEFAULT);
             }
         } finally {
             super.tearDown();
@@ -169,13 +170,11 @@ public class TestGroupChannelSenderConnections extends LoggingBaseTest {
             return counter.get();
         }
 
-        @Override
         public void messageReceived(Serializable msg, Member sender) {
             counter.incrementAndGet();
             log.info("["+name+"] Received message:"+msg+" from " + sender.getName());
         }
 
-        @Override
         public boolean accept(Serializable msg, Member sender) {
             return true;
         }

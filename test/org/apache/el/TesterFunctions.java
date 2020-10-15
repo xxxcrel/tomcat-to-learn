@@ -50,15 +50,6 @@ public class TesterFunctions {
     }
 
 
-    public static class Inner$Class {
-
-        public static final String RETVAL = "Return from bug49555";
-        public static String bug49555() {
-            return RETVAL;
-        }
-    }
-
-
     public static class FMapper extends FunctionMapper {
 
         @Override

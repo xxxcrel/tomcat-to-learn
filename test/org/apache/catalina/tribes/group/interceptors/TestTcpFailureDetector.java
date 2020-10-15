@@ -18,8 +18,10 @@ package org.apache.catalina.tribes.group.interceptors;
 
 import java.util.ArrayList;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,25 +81,16 @@ public class TestTcpFailureDetector {
         channel1.start(Channel.DEFAULT);
         channel2.start(Channel.DEFAULT);
         //Thread.sleep(1000);
-        Assert.assertEquals("Expecting member count to be equal",mbrlist1.members.size(),mbrlist2.members.size());
+        assertEquals("Expecting member count to be equal",mbrlist1.members.size(),mbrlist2.members.size());
         channel2.stop(Channel.SND_RX_SEQ);
         ByteMessage msg = new ByteMessage(new byte[1024]);
         try {
-            int msgCount = 0;
-            // Normally the first message sent should fail but occasional
-            // failures are observed on CI systems so messages are sent in a
-            // loop with a delay between them to try and account for timing
-            // differences.
-            while (msgCount < 5) {
-                channel1.send(channel1.getMembers(), msg, 0);
-                msgCount++;
-                Thread.sleep(500);
-            }
-            Assert.fail("Message send should have failed.");
+            channel1.send(channel1.getMembers(), msg, 0);
+            fail("Message send should have failed.");
         } catch ( ChannelException x ) {
             // Ignore
         }
-        Assert.assertEquals("Expecting member count to not be equal",mbrlist1.members.size()+1,mbrlist2.members.size());
+        assertEquals("Expecting member count to not be equal",mbrlist1.members.size()+1,mbrlist2.members.size());
         channel1.stop(Channel.DEFAULT);
         channel2.stop(Channel.DEFAULT);
     }
@@ -113,7 +106,7 @@ public class TestTcpFailureDetector {
         channel2.stop(Channel.SND_RX_SEQ);
         channel2.start(Channel.MBR_TX_SEQ);
         //Thread.sleep(1000);
-        Assert.assertEquals("Expecting member count to not be equal",mbrlist1.members.size()+1,mbrlist2.members.size());
+        assertEquals("Expecting member count to not be equal",mbrlist1.members.size()+1,mbrlist2.members.size());
         channel1.stop(Channel.DEFAULT);
         channel2.stop(Channel.DEFAULT);
     }
@@ -125,15 +118,15 @@ public class TestTcpFailureDetector {
         channel1.start(Channel.DEFAULT);
         channel2.start(Channel.DEFAULT);
         //Thread.sleep(1000);
-        Assert.assertEquals("Expecting member count to be equal",mbrlist1.members.size(),mbrlist2.members.size());
+        assertEquals("Expecting member count to be equal",mbrlist1.members.size(),mbrlist2.members.size());
         channel2.stop(Channel.MBR_TX_SEQ);
         ByteMessage msg = new ByteMessage(new byte[1024]);
         try {
             Thread.sleep(5000);
-            Assert.assertEquals("Expecting member count to be equal",mbrlist1.members.size(),mbrlist2.members.size());
+            assertEquals("Expecting member count to be equal",mbrlist1.members.size(),mbrlist2.members.size());
             channel1.send(channel1.getMembers(), msg, 0);
         } catch ( ChannelException x ) {
-            Assert.fail("Message send should have succeeded.");
+            fail("Message send should have succeeded.");
         }
         channel1.stop(Channel.DEFAULT);
         channel2.stop(Channel.DEFAULT);
@@ -143,17 +136,9 @@ public class TestTcpFailureDetector {
     public void tearDown() throws Exception {
         tcpFailureDetector1 = null;
         tcpFailureDetector2 = null;
-        try {
-            channel1.stop(Channel.DEFAULT);
-        } catch (Exception ignore) {
-            // Ignore
-        }
+        try { channel1.stop(Channel.DEFAULT);}catch (Exception ignore){ /* Ignore */ }
         channel1 = null;
-        try {
-            channel2.stop(Channel.DEFAULT);
-        } catch (Exception ignore) {
-            // Ignore
-        }
+        try { channel2.stop(Channel.DEFAULT);}catch (Exception ignore){ /* Ignore */ }
         channel2 = null;
     }
 
@@ -163,7 +148,6 @@ public class TestTcpFailureDetector {
             this.name = name;
         }
         public ArrayList<Member> members = new ArrayList<Member>();
-        @Override
         public void memberAdded(Member member) {
             if ( !members.contains(member) ) {
                 members.add(member);
@@ -175,7 +159,6 @@ public class TestTcpFailureDetector {
             }
         }
 
-        @Override
         public void memberDisappeared(Member member) {
             if ( members.contains(member) ) {
                 members.remove(member);

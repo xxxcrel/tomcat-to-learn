@@ -14,42 +14,28 @@ rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 rem See the License for the specific language governing permissions and
 rem limitations under the License.
 
+if "%OS%" == "Windows_NT" setlocal
 rem ---------------------------------------------------------------------------
 rem Wrapper script for command line tools
 rem
 rem Environment Variable Prerequisites
 rem
-rem   CATALINA_HOME   May point at your Catalina "build" directory.
+rem   CATALINA_HOME May point at your Catalina "build" directory.
 rem
-rem   TOOL_OPTS       (Optional) Java runtime options.
+rem   TOOL_OPTS     (Optional) Java runtime options used when the "start",
+rem                 "stop", or "run" command is executed.
 rem
-rem   JAVA_HOME       Must point at your Java Development Kit installation.
-rem                   Using JRE_HOME instead works as well.
+rem   JAVA_HOME     Must point at your Java Development Kit installation.
 rem
-rem   JRE_HOME        Must point at your Java Runtime installation.
-rem                   Defaults to JAVA_HOME if empty. If JRE_HOME and JAVA_HOME
-rem                   are both set, JRE_HOME is used.
-rem
-rem   JAVA_OPTS       (Optional) Java runtime options.
-rem
-rem   JAVA_ENDORSED_DIRS (Optional) Lists of of semi-colon separated directories
-rem                   containing some jars in order to allow replacement of APIs
-rem                   created outside of the JCP (i.e. DOM and SAX from W3C).
-rem                   It can also be used to update the XML parser implementation.
-rem                   This is only supported for Java <= 8.
-rem                   Defaults to $CATALINA_HOME/endorsed.
+rem   JAVA_OPTS     (Optional) Java runtime options used when the "start",
+rem                 "stop", or "run" command is executed.
 rem ---------------------------------------------------------------------------
 
-setlocal
-
 rem Guess CATALINA_HOME if not defined
-set "CURRENT_DIR=%cd%"
 if not "%CATALINA_HOME%" == "" goto gotHome
-set "CATALINA_HOME=%CURRENT_DIR%"
+set CATALINA_HOME=.
 if exist "%CATALINA_HOME%\bin\tool-wrapper.bat" goto okHome
-cd ..
-set "CATALINA_HOME=%cd%"
-cd "%CURRENT_DIR%"
+set CATALINA_HOME=..
 :gotHome
 if exist "%CATALINA_HOME%\bin\tool-wrapper.bat" goto okHome
 echo The CATALINA_HOME environment variable is not defined correctly
@@ -70,31 +56,18 @@ echo Cannot find "%CATALINA_HOME%\bin\setclasspath.bat"
 echo This file is needed to run this program
 goto end
 :okSetclasspath
-call "%CATALINA_HOME%\bin\setclasspath.bat" %1
-if errorlevel 1 goto end
+set "BASEDIR=%CATALINA_HOME%"
+call "%CATALINA_HOME%\bin\setclasspath.bat"
 
 rem Add on extra jar files to CLASSPATH
 rem Note that there are no quotes as we do not want to introduce random
 rem quotes into the CLASSPATH
-if "%CLASSPATH%" == "" goto emptyClasspath
-set "CLASSPATH=%CLASSPATH%;"
-:emptyClasspath
-set "CLASSPATH=%CLASSPATH%%CATALINA_HOME%\bin\bootstrap.jar;%CATALINA_HOME%\bin\tomcat-juli.jar;%CATALINA_HOME%\lib\servlet-api.jar;%CATALINA_HOME%\lib\tomcat-coyote.jar"
-
-set JAVA_OPTS=%JAVA_OPTS% -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
-
-rem Java 9 no longer supports the java.endorsed.dirs
-rem system property. Only try to use it if
-rem JAVA_ENDORSED_DIRS was explicitly set
-rem or CATALINA_HOME/endorsed exists.
-set ENDORSED_PROP=ignore.endorsed.dirs
-if "%JAVA_ENDORSED_DIRS%" == "" goto noEndorsedVar
-set ENDORSED_PROP=java.endorsed.dirs
-goto doneEndorsed
-:noEndorsedVar
-if not exist "%CATALINA_HOME%\endorsed" goto doneEndorsed
-set ENDORSED_PROP=java.endorsed.dirs
-:doneEndorsed
+if "%CLASSPATH%" == "" goto noclasspath
+set "CLASSPATH=%CLASSPATH%;%CATALINA_HOME%\bin\bootstrap.jar;%BASEDIR%\lib\servlet-api.jar"
+goto okclasspath
+:noclasspath
+set "CLASSPATH=%CATALINA_HOME%\bin\bootstrap.jar;%BASEDIR%\lib\servlet-api.jar"
+:okclasspath
 
 rem Get remaining unshifted command line arguments and save them in the
 set CMD_LINE_ARGS=
@@ -105,6 +78,6 @@ shift
 goto setArgs
 :doneSetArgs
 
-%_RUNJAVA% %JAVA_OPTS% %TOOL_OPTS% -D%ENDORSED_PROP%="%JAVA_ENDORSED_DIRS%" -classpath "%CLASSPATH%" -Dcatalina.home="%CATALINA_HOME%" org.apache.catalina.startup.Tool %CMD_LINE_ARGS%
+%_RUNJAVA% %JAVA_OPTS% %TOOL_OPTS% -Djava.endorsed.dirs="%JAVA_ENDORSED_DIRS%" -classpath "%CLASSPATH%" -Dcatalina.home="%CATALINA_HOME%" org.apache.catalina.startup.Tool %CMD_LINE_ARGS%
 
 :end

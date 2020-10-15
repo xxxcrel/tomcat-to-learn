@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/res/maven/annotations-api.iml" filepath="$PROJECT_DIR$/res/maven/annotations-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/apache-tomcat-6.0.53-src.iml" filepath="$PROJECT_DIR$/.idea/apache-tomcat-6.0.53-src.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/catalina.iml" filepath="$PROJECT_DIR$/res/maven/catalina.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/catalina-ant.iml" filepath="$PROJECT_DIR$/res/maven/catalina-ant.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/catalina-ha.iml" filepath="$PROJECT_DIR$/res/maven/catalina-ha.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/coyote.iml" filepath="$PROJECT_DIR$/res/maven/coyote.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/dbcp.iml" filepath="$PROJECT_DIR$/res/maven/dbcp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/el-api.iml" filepath="$PROJECT_DIR$/res/maven/el-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/jasper.iml" filepath="$PROJECT_DIR$/res/maven/jasper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/jasper-el.iml" filepath="$PROJECT_DIR$/res/maven/jasper-el.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/jsp-api.iml" filepath="$PROJECT_DIR$/res/maven/jsp-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/juli (1) (org.apache.tomcat.extras).iml" filepath="$PROJECT_DIR$/res/maven/juli (1) (org.apache.tomcat.extras).iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/juli (2) (org.apache.tomcat).iml" filepath="$PROJECT_DIR$/res/maven/juli (2) (org.apache.tomcat).iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/juli-adapters.iml" filepath="$PROJECT_DIR$/res/maven/juli-adapters.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/servlet-api.iml" filepath="$PROJECT_DIR$/res/maven/servlet-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/tomcat-catalina-jmx-remote.iml" filepath="$PROJECT_DIR$/res/maven/tomcat-catalina-jmx-remote.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/tomcat-catalina-ws.iml" filepath="$PROJECT_DIR$/res/maven/tomcat-catalina-ws.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/tomcat-i18n-es.iml" filepath="$PROJECT_DIR$/res/maven/tomcat-i18n-es.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/tomcat-i18n-fr.iml" filepath="$PROJECT_DIR$/res/maven/tomcat-i18n-fr.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/tomcat-i18n-ja.iml" filepath="$PROJECT_DIR$/res/maven/tomcat-i18n-ja.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/maven/tribes.iml" filepath="$PROJECT_DIR$/res/maven/tribes.iml" />
+    </modules>
+  </component>
+</project>

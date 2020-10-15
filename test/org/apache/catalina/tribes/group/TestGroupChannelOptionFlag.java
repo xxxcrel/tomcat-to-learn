@@ -16,8 +16,10 @@
  */
 package org.apache.catalina.tribes.group;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,13 +47,7 @@ public class TestGroupChannelOptionFlag {
 
     @After
     public void tearDown() throws Exception {
-        if (channel != null) {
-            try {
-                channel.stop(Channel.DEFAULT);
-            } catch (Exception ignore) {
-                // Ignore
-            }
-        }
+        if ( channel != null ) try {channel.stop(Channel.DEFAULT);}catch ( Exception ignore) { /* Ignore */ }
         channel = null;
     }
 
@@ -70,7 +66,7 @@ public class TestGroupChannelOptionFlag {
         }catch ( ChannelException x ) {
             if ( x.getMessage().indexOf("option flag conflict") >= 0 ) error = true;
         }
-        Assert.assertTrue(error);
+        assertTrue(error);
     }
 
     @Test
@@ -91,7 +87,7 @@ public class TestGroupChannelOptionFlag {
         }catch ( ChannelException x ) {
             if ( x.getMessage().indexOf("option flag conflict") >= 0 ) error = true;
         }
-        Assert.assertFalse(error);
+        assertFalse(error);
     }
 
     public static class TestInterceptor extends ChannelInterceptorBase {

@@ -16,13 +16,9 @@
  */
 package org.apache.catalina.core;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -32,209 +28,405 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.apache.catalina.Context;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleEvent;
-import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.catalina.startup.Tomcat.FixContextListener;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestApplicationContext extends TomcatBaseTest {
 
     @Test
-    public void testBug53257() throws Exception {
+    public void testGetRequestDispatcherNullPath01() throws Exception {
+        doTestGetRequestDispatcher(true, "/start", null, null, "/target", DispatcherServlet.NULL);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherNullPath02() throws Exception {
+        doTestGetRequestDispatcher(false, "/start", null, null, "/target", DispatcherServlet.NULL);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherOutsideContextRoot01() throws Exception {
+        doTestGetRequestDispatcher(
+                true, "/start", null, "../outside", "/target", DispatcherServlet.NULL);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherOutsideContextRoot02() throws Exception {
+        doTestGetRequestDispatcher(
+                false, "/start", null, "../outside", "/target", DispatcherServlet.NULL);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherEncodedTraversal() throws Exception {
+        doTestGetRequestDispatcher(
+                true, "/prefix/start", null, "%2E%2E/target", "/target", DispatcherServlet.NULL);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherTraversal01() throws Exception {
+        doTestGetRequestDispatcher(
+                true, "/prefix/start", null, "../target", "/target", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherTraversal02() throws Exception {
+        doTestGetRequestDispatcher(
+                false, "/prefix/start", null, "../target", "/target", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherTraversal03() throws Exception {
+        doTestGetRequestDispatcher(
+                true, "/prefix/start", null, "../target?a=b", "/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherTraversal04() throws Exception {
+        doTestGetRequestDispatcher(
+                false, "/prefix/start", null, "../target?a=b", "/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherTraversal05() throws Exception {
+        doTestGetRequestDispatcher(
+                true, "/prefix/start", "a=b", "../target", "/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcherTraversal06() throws Exception {
+        doTestGetRequestDispatcher(
+                false, "/prefix/start", "a=b", "../target", "/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher01() throws Exception {
+        doTestGetRequestDispatcher(
+                true, "/prefix/start", null, "target", "/prefix/target", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher02() throws Exception {
+        doTestGetRequestDispatcher(
+                false, "/prefix/start", null, "target", "/prefix/target", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher03() throws Exception {
+        doTestGetRequestDispatcher(true, "/prefix/start", null, "target?a=b", "/prefix/target",
+                TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher04() throws Exception {
+        doTestGetRequestDispatcher(false, "/prefix/start", null, "target?a=b", "/prefix/target",
+                TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher05() throws Exception {
+        doTestGetRequestDispatcher(true, "/prefix/start", "a=b", "target", "/prefix/target",
+                TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher06() throws Exception {
+        doTestGetRequestDispatcher(false, "/prefix/start", "a=b", "target", "/prefix/target",
+                TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher11() throws Exception {
+        doTestGetRequestDispatcher(true, "/aa%3Fbb%3Dcc/start", null, "target",
+                "/aa%3Fbb%3Dcc/target", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher12() throws Exception {
+        // Expected to fail because when the RD processes this as unencoded it
+        // sees /aa?bb=cc/target which it thinks is a query string. This is why
+        // Tomcat encodes by default.
+        doTestGetRequestDispatcher(false, "/aa%3Fbb%3Dcc/start", null, "target",
+                "/aa%3Fbb%3Dcc/target", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher13() throws Exception {
+        doTestGetRequestDispatcher(true, "/aa%3Fbb%3Dcc/start", null, "target?a=b",
+                "/aa%3Fbb%3Dcc/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher14() throws Exception {
+        // Expected to fail because when the RD processes this as unencoded it
+        // sees /aa?bb=cc/target which it thinks is a query string. This is why
+        // Tomcat encodes by default.
+        doTestGetRequestDispatcher(false, "/aa%3Fbb%3Dcc/start", null, "target?a=b",
+                "/aa%3Fbb%3Dcc/target", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher15() throws Exception {
+        doTestGetRequestDispatcher(true, "/aa%3Fbb%3Dcc/start", "a=b", "target",
+                "/aa%3Fbb%3Dcc/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher16() throws Exception {
+        // Expected to fail because when the RD processes this as unencoded it
+        // sees /aa?bb=cc/target which it thinks is a query string. This is why
+        // Tomcat encodes by default.
+        doTestGetRequestDispatcher(false, "/aa%3Fbb%3Dcc/start", "a=b", "target",
+                "/aa%3Fbb%3Dcc/target", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher21() throws Exception {
+        doTestGetRequestDispatcher(true, "/aa%3Dbb%3Dcc/start", null, "target",
+                "/aa%3Dbb%3Dcc/target", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher22() throws Exception {
+        doTestGetRequestDispatcher(false, "/aa%3Dbb%3Dcc/start", null, "target",
+                "/aa%3Dbb%3Dcc/target", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher23() throws Exception {
+        doTestGetRequestDispatcher(true, "/aa%3Dbb%3Dcc/start", null, "target?a=b",
+                "/aa%3Dbb%3Dcc/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher24() throws Exception {
+        doTestGetRequestDispatcher(false, "/aa%3Dbb%3Dcc/start", null, "target?a=b",
+                "/aa%3Dbb%3Dcc/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher25() throws Exception {
+        doTestGetRequestDispatcher(true, "/aa%3Dbb%3Dcc/start", "a=b", "target",
+                "/aa%3Dbb%3Dcc/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher26() throws Exception {
+        doTestGetRequestDispatcher(false, "/aa%3Dbb%3Dcc/start", "a=b", "target",
+                "/aa%3Dbb%3Dcc/target", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher31() throws Exception {
+        doTestGetRequestDispatcher(true, "/prefix/start", null, "aa%3Fbb%3Dcc",
+                "/prefix/aa%3Fbb%3Dcc", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher32() throws Exception {
+        doTestGetRequestDispatcher(false, "/prefix/start", null, "aa%3Fbb%3Dcc",
+                "/prefix/aa%3Fbb%3Dcc", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher33() throws Exception {
+        doTestGetRequestDispatcher(true, "/prefix/start", null, "aa%3Fbb%3Dcc?a=b",
+                "/prefix/aa%3Fbb%3Dcc", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher34() throws Exception {
+        doTestGetRequestDispatcher(false, "/prefix/start", null, "aa%3Fbb%3Dcc?a=b",
+                "/prefix/aa%3Fbb%3Dcc", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher35() throws Exception {
+        doTestGetRequestDispatcher(true, "/prefix/start", "a=b", "aa%3Fbb%3Dcc",
+                "/prefix/aa%3Fbb%3Dcc", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher36() throws Exception {
+        doTestGetRequestDispatcher(false, "/prefix/start", "a=b", "aa%3Fbb%3Dcc",
+                "/prefix/aa%3Fbb%3Dcc", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher41() throws Exception {
+        doTestGetRequestDispatcher(true, "/prefix/start", null, "aa%3Fbb%3Dcc",
+                "/prefix/aa%253Fbb%253Dcc", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher42() throws Exception {
+        doTestGetRequestDispatcher(false, "/prefix/start", null, "aa%3Fbb%3Dcc",
+                "/prefix/aa%253Fbb%253Dcc", TargetServlet.OK);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher43() throws Exception {
+        doTestGetRequestDispatcher(true, "/prefix/start", null, "aa%3Fbb%3Dcc?a=b",
+                "/prefix/aa%253Fbb%253Dcc", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher44() throws Exception {
+        doTestGetRequestDispatcher(false, "/prefix/start", null, "aa%3Fbb%3Dcc?a=b",
+                "/prefix/aa%253Fbb%253Dcc", TargetServlet.OK + "a=b");
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher45() throws Exception {
+        doTestGetRequestDispatcher(true, "/prefix/start", "a=b", "aa%3Fbb%3Dcc",
+                "/prefix/aa%253Fbb%253Dcc", Default404Servlet.DEFAULT_404);
+    }
+
+
+    @Test
+    public void testGetRequestDispatcher46() throws Exception {
+        doTestGetRequestDispatcher(false, "/prefix/start", "a=b", "aa%3Fbb%3Dcc",
+                "/prefix/aa%253Fbb%253Dcc", TargetServlet.OK + "a=b");
+    }
+
+
+    private void doTestGetRequestDispatcher(boolean useEncodedDispatchPaths, String startPath,
+            String startQueryString, String dispatchPath, String targetPath, String expectedBody)
+            throws Exception {
+
+        // Setup Tomcat instance
         Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+        // No file system docBase required
+        Context ctx = tomcat.addContext("/test", null);
+        ctx.setDispatchersUseEncodedPaths(useEncodedDispatchPaths);
+
+        // Add a default servlet to return 404 for not found resources
+        Tomcat.addServlet(ctx, "Default", new Default404Servlet());
+        ctx.addServletMapping("/*", "Default");
+
+        // Add a target servlet to dispatch to
+        Tomcat.addServlet(ctx, "target", new TargetServlet());
+        // Note: This will decode the provided path
+        ctx.addServletMapping(targetPath, "target");
+
+        Tomcat.addServlet(ctx, "rd", new DispatcherServlet(dispatchPath));
+        // Note: This will decode the provided path
+        ctx.addServletMapping(startPath, "rd");
 
         tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/index.jsp");
-
-        String result = res.toString();
-        String[] lines = result.split("\n");
-        for (String line : lines) {
-            if (line.startsWith("FAIL")) {
-                Assert.fail(line);
-            }
+        StringBuilder url = new StringBuilder("http://localhost:");
+        url.append(getPort());
+        url.append("/test");
+        url.append(startPath);
+        if (startQueryString != null) {
+            url.append('?');
+            url.append(startQueryString);
         }
+
+        ByteChunk bc = getUrl(url.toString());
+        String body = bc.toString();
+
+        Assert.assertEquals(expectedBody, body);
     }
 
 
-    @Test
-    public void testBug53467() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-
-        File appDir = new File("test/webapp");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-
-        tomcat.start();
-
-        ByteChunk res = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort() +
-                "/test/bug5nnnn/bug53467%5D.jsp", res, null);
-
-        Assert.assertEquals(HttpServletResponse.SC_OK, rc);
-        Assert.assertTrue(res.toString().contains("<p>OK</p>"));
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddFilterWithFilterNameNull() {
-        getServletContext().addFilter(null, (Filter) null);
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddFilterWithFilterNameEmptyString() {
-        getServletContext().addFilter("", (Filter) null);
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddServletWithServletNameNull() {
-        getServletContext().addServlet(null, (Servlet) null);
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddServletWithServletNameEmptyString() {
-        getServletContext().addServlet("", (Servlet) null);
-    }
-
-
-    @Test
-    public void testGetJspConfigDescriptor() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-
-        File appDir = new File("test/webapp");
-        // app dir is relative to server home
-        StandardContext standardContext = (StandardContext) tomcat.addWebapp(
-                null, "/test", appDir.getAbsolutePath());
-
-        ServletContext servletContext = standardContext.getServletContext();
-
-        Assert.assertNull(servletContext.getJspConfigDescriptor());
-
-        tomcat.start();
-
-        Assert.assertNotNull(servletContext.getJspConfigDescriptor());
-    }
-
-
-    private ServletContext getServletContext() {
-        Tomcat tomcat = getTomcatInstance();
-
-        File appDir = new File("test/webapp");
-        // app dir is relative to server home
-        StandardContext standardContext = (StandardContext) tomcat.addWebapp(
-                null, "/test", appDir.getAbsolutePath());
-
-        return standardContext.getServletContext();
-    }
-
-
-    @Test(expected = IllegalStateException.class)
-    public void testSetInitParameter() throws Exception {
-        getTomcatInstance().start();
-        getServletContext().setInitParameter("name", "value");
-    }
-
-
-    /*
-     * Cross-context requests with parallel deployment
-     */
-    @Test
-    public void testBug57190() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-
-        Context foo1 = new StandardContext();
-        foo1.setName("/foo##1");
-        foo1.setPath("/foo");
-        foo1.setWebappVersion("1");
-        foo1.setDocBase(System.getProperty("java.io.tmpdir"));
-        foo1.addLifecycleListener(new FixContextListener());
-        foo1.addLifecycleListener(new SetIdListener("foo1"));
-        tomcat.getHost().addChild(foo1);
-
-        Context foo2 = new StandardContext();
-        foo2.setName("/foo##2");
-        foo2.setPath("/foo");
-        foo2.setWebappVersion("2");
-        foo2.setDocBase(System.getProperty("java.io.tmpdir"));
-        foo2.addLifecycleListener(new FixContextListener());
-        foo2.addLifecycleListener(new SetIdListener("foo2"));
-        tomcat.getHost().addChild(foo2);
-
-        // No file system docBase required
-        Context bar = tomcat.addContext("/bar", null);
-        bar.addLifecycleListener(new SetIdListener("bar"));
-
-        // No file system docBase required
-        Context ctx = tomcat.addContext("", null);
-        ctx.addLifecycleListener(new SetIdListener("ROOT"));
-        ctx.setCrossContext(true);
-
-        Tomcat.addServlet(ctx, "Bug57190Servlet", new Bug57190Servlet());
-        ctx.addServletMapping("/", "Bug57190Servlet");
-
-        tomcat.start();
-
-        ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
-        String body = res.toString();
-
-        Assert.assertTrue(body, body.contains("01-bar"));
-        Assert.assertTrue(body, body.contains("02-foo2"));
-        Assert.assertTrue(body, body.contains("03-foo1"));
-        Assert.assertTrue(body, body.contains("04-foo2"));
-        Assert.assertTrue(body, body.contains("05-foo2"));
-        Assert.assertTrue(body, body.contains("06-ROOT"));
-        Assert.assertTrue(body, body.contains("07-ROOT"));
-        Assert.assertTrue(body, body.contains("08-foo2"));
-        Assert.assertTrue(body, body.contains("09-ROOT"));
-    }
-
-
-    private static class Bug57190Servlet extends HttpServlet {
+    private static class Default404Servlet extends HttpServlet {
 
         private static final long serialVersionUID = 1L;
+        private static final String DEFAULT_404 = "DEFAULT-404";
 
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp)
                 throws ServletException, IOException {
             resp.setContentType("text/plain");
-            PrintWriter pw = resp.getWriter();
-            ServletContext sc = req.getServletContext();
-            pw.println("01-" + sc.getContext("/bar").getInitParameter("id"));
-            pw.println("02-" + sc.getContext("/foo").getInitParameter("id"));
-            pw.println("03-" + sc.getContext("/foo##1").getInitParameter("id"));
-            pw.println("04-" + sc.getContext("/foo##2").getInitParameter("id"));
-            pw.println("05-" + sc.getContext("/foo##3").getInitParameter("id"));
-            pw.println("06-" + sc.getContext("/unknown").getInitParameter("id"));
-            pw.println("07-" + sc.getContext("/").getInitParameter("id"));
-            pw.println("08-" + sc.getContext("/foo/bar").getInitParameter("id"));
-            pw.println("09-" + sc.getContext("/football").getInitParameter("id"));
+            resp.setCharacterEncoding("UTF-8");
+            resp.getWriter().print(DEFAULT_404);
+            resp.setStatus(404);
         }
     }
 
 
-    private static class SetIdListener implements LifecycleListener {
+    private static class DispatcherServlet extends HttpServlet {
 
-        private final String id;
+        private static final long serialVersionUID = 1L;
+        private static final String NULL = "RD-NULL";
 
-        public SetIdListener(String id) {
-            this.id = id;
+        private final String dispatchPath;
+
+        public DispatcherServlet(String dispatchPath) {
+            this.dispatchPath = dispatchPath;
         }
 
         @Override
-        public void lifecycleEvent(LifecycleEvent event) {
-            if (Lifecycle.CONFIGURE_START_EVENT.equals(event.getType())) {
-                ((Context) event.getSource()).getServletContext().setInitParameter("id", id);
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws ServletException, IOException {
+
+            RequestDispatcher rd = req.getRequestDispatcher(dispatchPath);
+            if (rd == null) {
+                resp.setContentType("text/plain");
+                resp.setCharacterEncoding("UTF-8");
+                resp.getWriter().print(NULL);
+            } else {
+                rd.forward(req, resp);
+            }
+        }
+    }
+
+
+    private static class TargetServlet extends HttpServlet {
+
+        private static final long serialVersionUID = 1L;
+        private static final String OK = "OK";
+
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws ServletException, IOException {
+            resp.setContentType("text/plain");
+            resp.setCharacterEncoding("UTF-8");
+            resp.getWriter().print(OK);
+            String qs = req.getQueryString();
+            if (qs != null) {
+                resp.getWriter().print(qs);
             }
         }
     }

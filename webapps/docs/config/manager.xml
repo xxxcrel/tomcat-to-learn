@@ -81,37 +81,6 @@
         deployment descriptor (<code>/WEB-INF/web.xml</code>).</p>
       </attribute>
 
-      <attribute name="maxActiveSessions" required="false">
-        <p>The maximum number of active sessions that will be created by
-        this Manager, or <code>-1</code> (the default) for no limit.</p>
-
-        <p>When the limit is reached, any attempt to create a new session
-        (e.g. with <code>HttpServletRequest.getSession()</code> call)
-        will fail with an <code>IllegalStateException</code>.</p>
-      </attribute>
-
-      <attribute name="maxInactiveInterval" required="false">
-        <p><strong>Deprecated</strong>: This should be configured via the
-        Context.</p>
-        <p>The initial maximum time interval, in seconds,
-        between client requests before a session is invalidated. A negative value
-        will result in sessions never timing out. If the attribute is not provided,
-        a default of 1800 seconds (30 minutes) is used.</p>
-
-        <p>This attribute provides the initial value whenever a
-        new session is created, but the interval may be dynamically
-        varied by a servlet via the
-        <code>setMaxInactiveInterval</code> method of the <code>HttpSession</code> object.</p>
-      </attribute>
-
-      <attribute name="sessionIdLength" required="false">
-       <p>The length of session ids created by this Manager, measured in bytes,
-        excluding subsequent conversion to a hexadecimal string and
-        excluding any JVM route information used for load balancing.
-        The default is 16. You should set the length on a nested
-        <strong>SessionIdGenerator</strong> element instead.</p>
-      </attribute>
-
     </attributes>
 
   </subsection>
@@ -134,31 +103,48 @@
 
     <attributes>
 
+      <attribute name="algorithm" required="false">
+        <p>Name of the <em>Message Digest</em> algorithm used to calculate
+        session identifiers produced by this Manager.  This value must
+        be supported by the <code>java.security.MessageDigest</code> class.
+        If not specified, the default value is "MD5".</p>
+      </attribute>
+
+      <attribute name="entropy" required="false">
+        <p>A String value that is utilized when seeding the random number
+        generator used to create session identifiers for this Manager.
+        If not specified, a semi-useful value is calculated, but a long
+        String value should be specified in security-conscious
+        environments.</p>
+      </attribute>
+
+      <attribute name="maxActiveSessions" required="false">
+        <p>The maximum number of active sessions that will be created by
+        this Manager, or -1 (the default) for no limit.</p>
+      </attribute>
+
+      <attribute name="maxInactiveInterval" required="false">
+        <p><strong>Deprecated</strong>: This should be configured via the
+        Context.</p>
+        <p>The initial maximum time interval, in seconds, 
+        between client requests before a session is invalidated. A negative value
+        will result in sessions never timing out. If the attribute is not provided,
+        a default of 60 seconds is used.</p>
+        
+        <p>This attribute provides the initial value whenever a 
+        new session is created, but the interval may be dynamically 
+        varied by a servlet via the 
+        <code>setMaxInactiveInterval</code> method of the <code>HttpSession</code> object.</p>
+      </attribute>
+
       <attribute name="pathname" required="false">
         <p>Absolute or relative (to the work directory for this Context)
         pathname of the file in which session state will be preserved
         across application restarts, if possible.  The default is
         "SESSIONS.ser".<br />See
         <a href="#Persistence_Across_Restarts">Persistence Across Restarts</a>
-        for more information. This persistence may be
+        for more information. This persistence may be 
         disabled by setting this attribute to an empty string.</p>
-      </attribute>
-
-      <attribute name="persistAuthentication" required="false">
-        <p>Should authentication information be included when session state is
-        preserved across application restarts? If <code>true</code>, the session's
-        authentication is preserved so that the session remains authenticated
-        after the application has been restarted. If not specified, the default
-        value of <code>false</code> will be used.<br />See
-        <a href="#Persistence_Across_Restarts">Persistence Across Restarts</a>
-        for more information.</p>
-
-        <p>Please note that the session's <code>Principal</code> class as well
-        as its descendant classes are all subject to the
-        <strong>sessionAttributeValueClassNameFilter</strong>. If such a filter
-        is specified or a <code>SecurityManager</code> is enabled, the names of
-        the <code>Principal</code> class and descendant classes must match that
-        filter pattern in order to be restored.</p>
       </attribute>
 
       <attribute name="processExpiresFrequency" required="false">
@@ -169,31 +155,24 @@
         </p>
       </attribute>
 
-      <attribute name="secureRandomClass" required="false">
-        <p>Name of the Java class that extends
-        <code>java.security.SecureRandom</code> to use to generate session IDs.
-        If not specified, the default value is
+      <attribute name="randomClass" required="false">
+        <p>Java class name of the <code>java.util.Random</code>
+        implementation class to use.  If not specified, the default value is
         <code>java.security.SecureRandom</code>.</p>
       </attribute>
 
-      <attribute name="secureRandomProvider" required="false">
-        <p>Name of the provider to use to create the
-        <code>java.security.SecureRandom</code> instances that generate session
-        IDs. If an invalid algorithm and/or provider is specified, the Manager
-        will use the platform default provider and the default algorithm. If not
-        specified, the platform default provider will be used.</p>
+      <attribute name="randomFile" required="false">
+        <p>Name of a file that provides random data that are used to generate
+        session ids. If not specified, the default value is
+        <code>/dev/urandom</code> on Unix-like systems (those where such
+        file path is absolute) and empty on others.</p>
       </attribute>
 
-      <attribute name="secureRandomAlgorithm" required="false">
-        <p>Name of the algorithm to use to create the
-        <code>java.security.SecureRandom</code> instances that generate session
-        IDs. If an invalid algorithm and/or provider is specified, the Manager
-        will use the platform default provider and the default algorithm. If not
-        specified, the default algorithm of SHA1PRNG will be used. If the
-        default algorithm is not supported, the platform default will be used.
-        To specify that the platform default should be used, do not set the
-        secureRandomProvider attribute and set this attribute to the empty
-        string.</p>
+      <attribute name="sessionIdLength" required="false">
+       <p>The length of session ids created by this Manager, measured in bytes,
+        excluding subsequent conversion to a hexadecimal string and
+        excluding any JVM route information used for load balancing.
+        The default is 16.</p>
       </attribute>
 
       <attribute name="sessionAttributeNameFilter" required="false">
@@ -217,7 +196,7 @@
         must fully match the pattern. If not specified, the default value of
         <code>null</code> will be used unless a <code>SecurityManager</code> is
         enabled in which case the default will be
-        <code>java\\.lang\\.(?:Boolean|Integer|Long|Number|String)|org\\.apache\\.catalina\\.realm\\.GenericPrincipal\\$SerializablePrincipal|\\[Ljava.lang.String;</code>.</p>
+        <code>java\\.lang\\.(?:Boolean|Integer|Long|Number|String)</code>.</p>
       </attribute>
 
       <attribute name="warnOnSessionAttributeFilterFailure" required="false">
@@ -233,12 +212,16 @@
 
     <h3>Persistent Manager Implementation</h3>
 
+    <p><em><strong>WARNING - Use of this Manager implementation
+    has not been thoroughly tested, and should be considered experimental!
+    </strong></em></p>
+
     <p><strong>NOTE:</strong> You must set either the
     <code>org.apache.catalina.session.StandardSession.ACTIVITY_CHECK</code> or
     <code>org.apache.catalina.STRICT_SERVLET_COMPLIANCE</code>
     <a href="systemprops.html">system properties</a> to <code>true</code> for
     the persistent manager to work correctly.</p>
-
+    
     <p>The persistent implementation of <strong>Manager</strong> is
     <strong>org.apache.catalina.session.PersistentManager</strong>.  In
     addition to the usual operations of creating and deleting sessions, a
@@ -250,17 +233,37 @@
     element - this is required for use of <code>PersistentManager</code>.</p>
 
     <p>This implementation of Manager supports the following attributes in
-    addition to the <a href="#Common_Attributes">Common Attributes</a>
+    addition to the <a href="#Common Attributes">Common Attributes</a>
     described earlier.</p>
 
     <attributes>
 
-      <attribute name="className" required="true">
-        <p>It has the same meaning as described in the
-        <a href="#Common_Attributes">Common Attributes</a> above.
+      <attribute name="algorithm" required="false">
+        <p>Name of the <em>Message Digest</em> algorithm used to calculate
+        session identifiers produced by this Manager.  This value must
+        be supported by the <code>java.security.MessageDigest</code> class.
+        If not specified, the default value is "MD5".</p>
+      </attribute>
+
+      <attribute name="className" required="false">
+        <p>Java class name of the implementation to use.  This class must
+        implement the <code>org.apache.catalina.Manager</code> interface.
         You <strong>must</strong> specify
         <code>org.apache.catalina.session.PersistentManager</code> to use
         this manager implementation.</p>
+      </attribute>
+
+      <attribute name="entropy" required="false">
+        <p>A String value that is utilized when seeding the random number
+        generator used to create session identifiers for this Manager.
+        If not specified, a semi-useful value is calculated, but a long
+        String value should be specified in security-conscious
+        environments.</p>
+      </attribute>
+
+      <attribute name="maxActiveSessions" required="false">
+        <p>The maximum number of active sessions that will be created by
+        this Manager, or -1 (the default) for no limit.</p>
       </attribute>
 
       <attribute name="maxIdleBackup" required="false">
@@ -288,25 +291,31 @@
         By default, this value is set to <code>-1</code>.</p>
       </attribute>
 
-      <attribute name="persistAuthentication" required="false">
-        <p>Should authentication information be included when sessions are
-        swapped out to persistent storage? If <code>true</code>, the session's
-        authentication is preserved so that the session remains authenticated
-        after being reloaded (swapped in) from persistent storage. If not
-        specified, the default value of <code>false</code> will be used.</p>
-
-        <p>Please note that the session's <code>Principal</code> class as well
-        as its descendant classes are all subject to the
-        <strong>sessionAttributeValueClassNameFilter</strong>. If such a filter
-        is specified or a <code>SecurityManager</code> is enabled, the names of
-        the <code>Principal</code> class and descendant classes must match that
-        filter pattern in order to be restored.</p>
+      <attribute name="maxInactiveInterval" required="false">
+        <p><strong>Deprecated</strong>: This should be configured via the
+        Context.</p>
+        <p>The initial maximum time interval, in seconds, 
+        between client requests before a session is invalidated. A negative value
+        will result in sessions never timing out. If the attribute is not provided,
+        a default of 60 seconds is used.</p>
+        
+        <p>This attribute provides the initial value whenever a 
+        new session is created, but the interval may be dynamically 
+        varied by a servlet via the 
+        <code>setMaxInactiveInterval</code>method of the <code>HttpSession</code> object.</p>
       </attribute>
 
-      <attribute name="processExpiresFrequency" required="false">
-        <p>It is the same as described above for the
-        <code>org.apache.catalina.session.StandardManager</code> class.
-        </p>
+      <attribute name="randomClass" required="false">
+        <p>Java class name of the <code>java.util.Random</code>
+        implementation class to use.  If not specified, the default value is
+        <code>java.security.SecureRandom</code>.</p>
+      </attribute>
+
+      <attribute name="randomFile" required="false">
+        <p>Name of a file that provides random data that are used to generate
+        session ids. If not specified, the default value is
+        <code>/dev/urandom</code> on Unix-like systems (those where such
+        file path is absolute) and empty on others.</p>
       </attribute>
 
       <attribute name="saveOnRestart" required="false">
@@ -315,24 +324,13 @@
         this attribute is set to <code>true</code>.</p>
       </attribute>
 
-
-      <attribute name="secureRandomClass" required="false">
-        <p>It is the same as described above for the
-        <code>org.apache.catalina.session.StandardManager</code> class.
-        </p>
+      <attribute name="sessionIdLength" required="false">
+       <p>The length of session ids created by this Manager, measured in bytes,
+        excluding subsequent conversion to a hexadecimal string and
+        excluding any JVM route information used for load balancing.
+        The default is 16.</p>
       </attribute>
 
-      <attribute name="secureRandomProvider" required="false">
-        <p>It is the same as described above for the
-        <code>org.apache.catalina.session.StandardManager</code> class.
-        </p>
-      </attribute>
-
-      <attribute name="secureRandomAlgorithm" required="false">
-        <p>It is the same as described above for the
-        <code>org.apache.catalina.session.StandardManager</code> class.
-        </p>
-      </attribute>
 
       <attribute name="sessionAttributeNameFilter" required="false">
         <p>A regular expression used to filter which session attributes will be
@@ -355,7 +353,7 @@
         must fully match the pattern. If not specified, the default value of
         <code>null</code> will be used unless a <code>SecurityManager</code> is
         enabled in which case the default will be
-        <code>java\\.lang\\.(?:Boolean|Integer|Long|Number|String)|org\\.apache\\.catalina\\.realm\\.GenericPrincipal\\$SerializablePrincipal|\\[Ljava.lang.String;</code>.</p>
+        <code>java\\.lang\\.(?:Boolean|Integer|Long|Number|String)</code>.</p>
       </attribute>
 
       <attribute name="warnOnSessionAttributeFilterFailure" required="false">
@@ -380,25 +378,11 @@
 
 <section name="Nested Components">
 
-  <h3>All Manager Implementations</h3>
+  <h3>Standard Manager Implementation</h3>
 
-  <p>All Manager implementations bundled with Tomcat or extending
-  <code>ManagerBase</code> allow nesting of a
-  <strong>&lt;SessionIdGenerator&gt;</strong> element. It defines
-  the behavior of session id generation.  All implementations
-  of the <a href="sessionidgenerator.html">SessionIdGenerator</a> allow the
-  following attributes:
-  </p>
-
-  <attributes>
-
-    <attribute name="sessionIdLength" required="false">
-      <p>The length of the session ID may be changed with the
-      <strong>sessionIdLength</strong> attribute.
-      </p>
-    </attribute>
-
-  </attributes>
+  <p>If you are using the <em>Standard Manager Implementation</em>
+  as described above, no elements may be nested inside your
+  <strong>&lt;Manager&gt;</strong> element.</p>
 
   <h3>Persistent Manager Implementation</h3>
 
@@ -481,16 +465,6 @@
       session table.</p>
     </attribute>
 
-    <attribute name="dataSourceName" required="false">
-      <p>Name of the JNDI resource for a JDBC DataSource-factory. If this option
-      is given and a valid JDBC resource can be found, it will be used and any
-      direct configuration of a JDBC connection via <code>connectionURL</code>
-      and <code>driverName</code> will be ignored. Since this code uses prepared
-      statements, you might want to configure pooled prepared statements as
-      shown in <a href="../jndi-resources-howto.html">the JNDI resources
-      HOW-TO</a>.</p>
-    </attribute>
-
     <attribute name="driverName" required="true">
       <p>Java class name of the JDBC driver to be used.</p>
     </attribute>
@@ -550,7 +524,8 @@
   Detailed SQL commands vary depending on the database you are using, but
   a script like this will generally be required:</p>
 
-<source>create table tomcat_sessions (
+<source>
+create table tomcat_sessions (
   session_id     varchar(100) not null primary key,
   valid_session  char(1) not null,
   max_inactive   int not null,
@@ -558,7 +533,8 @@
   app_name       varchar(255),
   session_data   mediumblob,
   KEY kapp_name(app_name)
-);</source>
+);
+</source>
 
   <p>In order for the JDBC Based Store to successfully connect to your
   database, the JDBC driver you configure must be visible to Tomcat's
@@ -587,15 +563,6 @@
     including the <code>&lt;distributable&gt;</code> element in your web
     application deployment descriptor (<code>/WEB-INF/web.xml</code>).</p>
 
-    <p>Note that, if <strong>persistAuthentication</strong> is also set to
-    <code>true</code>, the <code>Principal</code> class present in the session
-    MUST also implement the <code>java.io.Serializable</code> interface in order
-    to make authentication persistence work properly. The actual type of that
-    <code>Principal</code> class is determined by the <a href="realm.html">
-    Realm</a> implementation used with the application. Tomcat's standard
-    <code>Principal</code> class instantiated by most of the Realms (except
-    <code>JAASRealm</code>) implements <code>java.io.Serializable</code>.</p>
-
     <p>The persistence across restarts provided by the
     <strong>StandardManager</strong> is a simpler implementation than that
     provided by the <strong>PersistentManager</strong>. If robust, production
@@ -613,7 +580,7 @@
     a <a href="context.html">Context</a> configuration file for your web
     application and add the following element there:</p>
 
-    <source><![CDATA[<Manager pathname="" />]]></source>
+    <source>&lt;Manager pathname="" /&gt;</source>
   </subsection>
 
 </section>

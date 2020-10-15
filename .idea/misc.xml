@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/res/maven/dbcp.pom" />
+        <option value="$PROJECT_DIR$/res/maven/juli.pom" />
+        <option value="$PROJECT_DIR$/res/maven/coyote.pom" />
+        <option value="$PROJECT_DIR$/res/maven/el-api.pom" />
+        <option value="$PROJECT_DIR$/res/maven/jasper.pom" />
+        <option value="$PROJECT_DIR$/res/maven/tribes.pom" />
+        <option value="$PROJECT_DIR$/res/maven/jsp-api.pom" />
+        <option value="$PROJECT_DIR$/res/maven/catalina.pom" />
+        <option value="$PROJECT_DIR$/res/maven/jasper-el.pom" />
+        <option value="$PROJECT_DIR$/res/maven/catalina-ha.pom" />
+        <option value="$PROJECT_DIR$/res/maven/juli-extras.pom" />
+        <option value="$PROJECT_DIR$/res/maven/servlet-api.pom" />
+        <option value="$PROJECT_DIR$/res/maven/catalina-ant.pom" />
+        <option value="$PROJECT_DIR$/res/maven/juli-adapters.pom" />
+        <option value="$PROJECT_DIR$/res/maven/tomcat-i18n-es.pom" />
+        <option value="$PROJECT_DIR$/res/maven/tomcat-i18n-fr.pom" />
+        <option value="$PROJECT_DIR$/res/maven/tomcat-i18n-ja.pom" />
+        <option value="$PROJECT_DIR$/res/maven/annotations-api.pom" />
+        <option value="$PROJECT_DIR$/res/maven/tomcat-catalina-ws.pom" />
+        <option value="$PROJECT_DIR$/res/maven/tomcat-catalina-jmx-remote.pom" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="1.8" project-jdk-type="JavaSDK" />
+</project>

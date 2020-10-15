@@ -23,7 +23,7 @@ import javax.el.ValueExpression;
 
 import org.junit.Assert;
 import org.junit.Test;
-
+import org.apache.el.ExpressionFactoryImpl;
 import org.apache.jasper.JasperException;
 import org.apache.jasper.compiler.ELNode.Nodes;
 import org.apache.jasper.compiler.ELParser.TextBuilder;
@@ -238,15 +238,13 @@ public class TestELParser {
 
     @Test
     public void testEscape04() throws JasperException {
-        // When parsed as EL in JSP the escaping of $ as \$ is optional
-        doTestParser("\\$", "\\$", "$");
+        doTestParser("\\$", "$");
     }
 
 
     @Test
     public void testEscape05() throws JasperException {
-        // When parsed as EL in JSP the escaping of # as \# is optional
-        doTestParser("\\#", "\\#", "#");
+        doTestParser("\\#", "#");
     }
 
 
@@ -274,30 +272,18 @@ public class TestELParser {
     }
 
 
-    @Test
-    public void testEscape11() throws JasperException {
-        // Bug 56612
-        doTestParser("${'\\'\\''}", "''");
-    }
-
-
     private void doTestParser(String input, String expected) throws JasperException {
-        doTestParser(input, expected, input);
-    }
-
-    private void doTestParser(String input, String expectedResult, String expectedBuilderOutput) throws JasperException {
-
         ELException elException = null;
         String elResult = null;
 
         // Don't try and evaluate expressions that depend on variables or functions
-        if (expectedResult != null) {
+        if (expected != null) {
             try {
-                ExpressionFactory factory = ExpressionFactory.newInstance();
+                ExpressionFactory factory = new ExpressionFactoryImpl();
                 ELContext context = new ELContextImpl();
                 ValueExpression ve = factory.createValueExpression(context, input, String.class);
                 elResult = ve.getValue(context).toString();
-                Assert.assertEquals(expectedResult, elResult);
+                Assert.assertEquals(expected, elResult);
             } catch (ELException ele) {
                 elException = ele;
             }
@@ -318,6 +304,6 @@ public class TestELParser {
 
         nodes.visit(textBuilder);
 
-        Assert.assertEquals(expectedBuilderOutput, textBuilder.getText());
+        Assert.assertEquals(input, textBuilder.getText());
     }
 }

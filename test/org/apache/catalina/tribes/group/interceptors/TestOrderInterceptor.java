@@ -21,8 +21,10 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -90,8 +92,8 @@ public class TestOrderInterceptor {
             channels[0].send(dest,Integer.valueOf(value.getAndAdd(1)),0);
         }
         Thread.sleep(5000);
-        for (TestListener testListener : test) {
-            Assert.assertFalse(testListener.fail);
+        for ( int i=0; i<test.length; i++ ) {
+            assertFalse(test[i].fail);
         }
     }
 
@@ -101,7 +103,6 @@ public class TestOrderInterceptor {
         final AtomicInteger value = new AtomicInteger(0);
         final Queue<Exception> exceptionQueue = new ConcurrentLinkedQueue<Exception>();
         Runnable run = new Runnable() {
-            @Override
             public void run() {
                 for (int i = 0; i < 100; i++) {
                     try {
@@ -118,19 +119,19 @@ public class TestOrderInterceptor {
         for (int i=0;i<threads.length;i++) {
             threads[i] = new Thread(run);
         }
-        for (Thread thread : threads) {
-            thread.start();
+        for (int i=0;i<threads.length;i++) {
+            threads[i].start();
         }
-        for (Thread thread : threads) {
-            thread.join();
+        for (int i=0;i<threads.length;i++) {
+            threads[i].join();
         }
         if (!exceptionQueue.isEmpty()) {
-            Assert.fail("Exception while sending in threads: "
+            fail("Exception while sending in threads: "
                     + exceptionQueue.remove().toString());
         }
         Thread.sleep(5000);
-        for (TestListener testListener : test) {
-            Assert.assertFalse(testListener.fail);
+        for ( int i=0; i<test.length; i++ ) {
+            assertFalse(test[i].fail);
         }
     }
 
@@ -154,7 +155,6 @@ public class TestOrderInterceptor {
         int cnt = 0;
         int total = 0;
         volatile boolean fail = false;
-        @Override
         public synchronized void messageReceived(Serializable msg, Member sender) {
             total++;
             Integer i = (Integer)msg;
@@ -164,7 +164,6 @@ public class TestOrderInterceptor {
 
         }
 
-        @Override
         public boolean accept(Serializable msg, Member sender) {
             return (msg instanceof Integer);
         }

@@ -26,26 +26,21 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import org.apache.catalina.Context;
-import org.apache.catalina.Globals;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
 
-public class TestSendFile extends TomcatBaseTest {
+public class TestSendFile extends TomcatBaseTest{
 
     public static final int ITERATIONS = 10;
     public static final int EXPECTED_CONTENT_LENGTH = 100000;
@@ -58,12 +53,12 @@ public class TestSendFile extends TomcatBaseTest {
         Context root = tomcat.addContext("", TEMP_DIR);
 
         File[] files = new File[ITERATIONS];
-        for (int i = 0; i < ITERATIONS; i++) {
-            files[i] = generateFile(TEMP_DIR, "-" + i, EXPECTED_CONTENT_LENGTH * (i + 1));
+        for (int i=0; i<ITERATIONS; i++) {
+            files[i] = generateFile(TEMP_DIR, "-"+i, EXPECTED_CONTENT_LENGTH * (i+1));
         }
         try {
 
-            for (int i = 0; i < ITERATIONS; i++) {
+            for (int i=0; i<ITERATIONS; i++) {
                 WritingServlet servlet = new WritingServlet(files[i]);
                 Tomcat.addServlet(root, "servlet" + i, servlet);
                 root.addServletMapping("/servlet" + i, "servlet" + i);
@@ -73,14 +68,12 @@ public class TestSendFile extends TomcatBaseTest {
 
             ByteChunk bc = new ByteChunk();
             Map<String, List<String>> respHeaders = new HashMap<String, List<String>>();
-            for (int i = 0; i < ITERATIONS; i++) {
+            for (int i=0; i<ITERATIONS; i++) {
                 long start = System.currentTimeMillis();
-                int rc = getUrl("http://localhost:" + getPort() + "/servlet" + i, bc, null,
-                        respHeaders);
-                Assert.assertEquals(HttpServletResponse.SC_OK, rc);
-                System.out.println("Client received " + bc.getLength() + " bytes in "
-                        + (System.currentTimeMillis() - start) + " ms.");
-                Assert.assertEquals(EXPECTED_CONTENT_LENGTH * (i + 1L), bc.getLength());
+                int rc = getUrl("http://localhost:" + getPort() + "/servlet" + i, bc, null, respHeaders);
+                assertEquals(HttpServletResponse.SC_OK, rc);
+                System.out.println("Client received "+bc.getLength() + " bytes in "+(System.currentTimeMillis()-start)+" ms.");
+                assertEquals(EXPECTED_CONTENT_LENGTH * (i+1), bc.getLength());
 
                 bc.recycle();
             }
@@ -116,8 +109,8 @@ public class TestSendFile extends TomcatBaseTest {
                 fw.close();
             }
         }
-        System.out
-                .println("Created file:" + f.getAbsolutePath() + " with " + f.length() + " bytes.");
+        System.out.println("Created file:" + f.getAbsolutePath() + " with " + f.length()
+                + " bytes.");
         return f;
 
     }
@@ -140,10 +133,10 @@ public class TestSendFile extends TomcatBaseTest {
             resp.setContentType("'application/octet-stream");
             resp.setCharacterEncoding("ISO-8859-1");
             resp.setContentLength((int) f.length());
-            if (Boolean.TRUE.equals(req.getAttribute(Globals.SENDFILE_SUPPORTED_ATTR))) {
-                req.setAttribute(Globals.SENDFILE_FILENAME_ATTR, f.getAbsolutePath());
-                req.setAttribute(Globals.SENDFILE_FILE_START_ATTR, Long.valueOf(0));
-                req.setAttribute(Globals.SENDFILE_FILE_END_ATTR, Long.valueOf(f.length()));
+            if (Boolean.TRUE.equals(req.getAttribute("org.apache.tomcat.sendfile.support"))) {
+                req.setAttribute("org.apache.tomcat.sendfile.filename", f.getAbsolutePath());
+                req.setAttribute("org.apache.tomcat.sendfile.start", new Long(0));
+                req.setAttribute("org.apache.tomcat.sendfile.end", new Long(f.length()));
             } else {
                 byte[] c = new byte[8192];
                 BufferedInputStream in = null;
@@ -154,13 +147,12 @@ public class TestSendFile extends TomcatBaseTest {
                     long start = System.currentTimeMillis();
                     do {
                         len = in.read(c);
-                        if (len > 0) {
-                            resp.getOutputStream().write(c, 0, len);
+                        if (len>0) {
+                            resp.getOutputStream().write(c,0,len);
                             written += len;
                         }
                     } while (len > 0);
-                    System.out.println("Server Wrote " + written + " bytes in "
-                            + (System.currentTimeMillis() - start) + " ms.");
+                    System.out.println("Server Wrote "+written + " bytes in "+(System.currentTimeMillis()-start)+" ms.");
                 } finally {
                     if (in != null) {
                         in.close();
@@ -170,97 +162,4 @@ public class TestSendFile extends TomcatBaseTest {
         }
     }
 
-
-    @Test
-    public void testBug60409() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-
-        Context ctx = tomcat.addContext("", TEMP_DIR);
-        File file = generateFile(TEMP_DIR, "", EXPECTED_CONTENT_LENGTH);
-        Tomcat.addServlet(ctx, "test", new Bug60409Servlet(file));
-        ctx.addServletMapping("/", "test");
-
-        tomcat.start();
-
-        ByteChunk bc = new ByteChunk();
-        getUrl("http://localhost:" + getPort() + "/test/?" + Globals.SENDFILE_SUPPORTED_ATTR
-                + "=true", bc, null);
-
-        CountDownLatch latch = new CountDownLatch(2);
-        List<Throwable> throwables = new CopyOnWriteArrayList<Throwable>();
-        new Thread(
-                new RequestExecutor("http://localhost:" + getPort() + "/test/", latch, throwables))
-                        .start();
-        new Thread(
-                new RequestExecutor("http://localhost:" + getPort() + "/test/", latch, throwables))
-                        .start();
-
-        latch.await(3000, TimeUnit.MILLISECONDS);
-
-        if (throwables.size() > 0) {
-            Assert.fail("[" + throwables.size() + "] throwables observed");
-        }
-    }
-
-    private static final class Bug60409Servlet extends HttpServlet {
-        private static final long serialVersionUID = 1L;
-        private final File file;
-
-        Bug60409Servlet(File file) {
-            this.file = file;
-        }
-
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            if (Boolean.valueOf(req.getParameter(Globals.SENDFILE_SUPPORTED_ATTR)).booleanValue()) {
-                resp.setContentType("'application/octet-stream");
-                resp.setCharacterEncoding("ISO-8859-1");
-                resp.setContentLength((int) file.length());
-                req.setAttribute(Globals.SENDFILE_FILENAME_ATTR, file.getAbsolutePath());
-                req.setAttribute(Globals.SENDFILE_FILE_START_ATTR, Long.valueOf(0));
-                req.setAttribute(Globals.SENDFILE_FILE_END_ATTR, Long.valueOf(file.length()));
-                file.delete();
-            } else {
-                byte[] c = new byte[1024];
-                Random rd = new Random();
-                rd.nextBytes(c);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                resp.getOutputStream().write(c);
-            }
-        }
-
-    }
-
-    private static final class RequestExecutor implements Runnable {
-        private final String url;
-        private final CountDownLatch latch;
-        private final List<Throwable> exceptions;
-
-        RequestExecutor(String url, CountDownLatch latch, List<Throwable> exceptions) {
-            this.url = url;
-            this.latch = latch;
-            this.exceptions = exceptions;
-        }
-
-        @Override
-        public void run() {
-            try {
-                ByteChunk result = new ByteChunk();
-                int rc = getUrl(url, result, null);
-                Assert.assertEquals(HttpServletResponse.SC_OK, rc);
-                Assert.assertEquals(1024, result.getLength());
-            } catch (Throwable e) {
-                e.printStackTrace();
-                exceptions.add(e);
-            } finally {
-                latch.countDown();
-            }
-        }
-
-    }
 }

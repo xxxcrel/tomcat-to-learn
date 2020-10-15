@@ -16,33 +16,20 @@
 ================================================================================
 
                          =================================
-                         Apache Tomcat 7.0 Patch Proposals
+                         Apache Tomcat 6.0 Patch Proposals
                          =================================
 
 
 RELEASE SHOWSTOPPERS:
 
+None
 
-
-PATCHES ACCEPTED TO BACKPORT:
-  [ start all new proposals below, under PATCHES PROPOSED. ]
 
 PATCHES PROPOSED TO BACKPORT:
   [ New proposals should be added at the end of the list ]
 
-* https://bz.apache.org/bugzilla/show_bug.cgi?id=54330
-  Refactor Member interface to reduce dependency on concrete implementation.
-  Based on a patch by Greg Turnquist.
-  I have added this to the status file because it changes an interface. I don't
-  believe there is any harm in this - the interface isn't really usable prior to
-  this patch - but I'd prefer this change to be RTC.
-  http://svn.apache.org/viewvc?rev=1430602&view=rev
-  +1: markt, fhanik
-  -1:
+None. Tomcat 6 is CTR (Commit-Then-Review) since 2015-11-02.
+  
+PATCHES/ISSUES THAT ARE STALLED:
 
-* Back-port r1437083 from trunk.
-  http://svn.apache.org/viewvc?view=revision&revision=1437083
-  Adds SSLContext.clearOptions method to allow clearing of SSL_OP_* options
-  in OpenSSL.
-  This will require tcnative 1.1.25 or errors may be thrown when attempting
-  to call this method.
+None

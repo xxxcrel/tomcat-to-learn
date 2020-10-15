@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="jasper-el" />
+        <module name="dbcp" />
+        <module name="jsp-api" />
+        <module name="juli (2) (org.apache.tomcat)" />
+        <module name="catalina-ha" />
+        <module name="catalina-ant" />
+        <module name="tomcat-catalina-jmx-remote" />
+        <module name="tribes" />
+        <module name="jasper" />
+        <module name="tomcat-i18n-fr" />
+        <module name="juli-adapters" />
+        <module name="el-api" />
+        <module name="tomcat-i18n-es" />
+        <module name="coyote" />
+        <module name="catalina" />
+        <module name="annotations-api" />
+        <module name="juli (1) (org.apache.tomcat.extras)" />
+        <module name="tomcat-catalina-ws" />
+        <module name="tomcat-i18n-ja" />
+        <module name="servlet-api" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="annotations-api" target="1.5" />
+      <module name="catalina" target="1.5" />
+      <module name="catalina-ant" target="1.5" />
+      <module name="catalina-ha" target="1.5" />
+      <module name="coyote" target="1.5" />
+      <module name="dbcp" target="1.5" />
+      <module name="el-api" target="1.5" />
+      <module name="jasper" target="1.5" />
+      <module name="jasper-el" target="1.5" />
+      <module name="jsp-api" target="1.5" />
+      <module name="juli (1) (org.apache.tomcat.extras)" target="1.5" />
+      <module name="juli (2) (org.apache.tomcat)" target="1.5" />
+      <module name="juli-adapters" target="1.5" />
+      <module name="servlet-api" target="1.5" />
+      <module name="tomcat-catalina-jmx-remote" target="1.5" />
+      <module name="tomcat-catalina-ws" target="1.5" />
+      <module name="tomcat-i18n-es" target="1.5" />
+      <module name="tomcat-i18n-fr" target="1.5" />
+      <module name="tomcat-i18n-ja" target="1.5" />
+      <module name="tribes" target="1.5" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

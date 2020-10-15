@@ -16,29 +16,24 @@
  */
 package org.apache.catalina.tribes.test.transport;
 
-import java.math.BigDecimal;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.text.DecimalFormat;
-import java.util.Iterator;
-
-import org.apache.catalina.tribes.Channel;
-import org.apache.catalina.tribes.Member;
-import org.apache.catalina.tribes.io.ChannelData;
-import org.apache.catalina.tribes.io.XByteBuffer;
-import org.apache.catalina.tribes.membership.MemberImpl;
 import org.apache.catalina.tribes.transport.nio.NioSender;
+import org.apache.catalina.tribes.membership.MemberImpl;
+import java.nio.channels.Selector;
+import org.apache.catalina.tribes.io.XByteBuffer;
+import org.apache.catalina.tribes.Member;
+import java.nio.channels.SelectionKey;
+import java.util.Iterator;
+import org.apache.catalina.tribes.Channel;
+import org.apache.catalina.tribes.io.ChannelData;
+import java.math.BigDecimal;
 
 public class SocketNioSend {
 
     public static void main(String[] args) throws Exception {
-        Selector selector;
-        synchronized (Selector.class) {
-            // Selector.open() isn't thread safe
-            // http://bugs.sun.com/view_bug.do?bug_id=6427854
-            // Affects 1.6.0_29, fixed in 1.7.0_01
-            selector = Selector.open();
-        }
+        Selector selector = Selector.open();
         Member mbr = new MemberImpl("localhost", 9999, 0);
         ChannelData data = new ChannelData();
         data.setOptions(Channel.SEND_OPTIONS_BYTE_MESSAGE);
@@ -80,9 +75,9 @@ public class SocketNioSend {
                 continue;
             }
 
-            Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+            Iterator it = selector.selectedKeys().iterator();
             while (it.hasNext()) {
-                SelectionKey sk = it.next();
+                SelectionKey sk = (SelectionKey) it.next();
                 it.remove();
                 try {
                     int readyOps = sk.readyOps();

@@ -14,20 +14,16 @@ rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 rem See the License for the specific language governing permissions and
 rem limitations under the License.
 
+if "%OS%" == "Windows_NT" setlocal
 rem ---------------------------------------------------------------------------
 rem Script to digest password using the algorithm specified
 rem ---------------------------------------------------------------------------
 
-setlocal
-
 rem Guess CATALINA_HOME if not defined
-set "CURRENT_DIR=%cd%"
 if not "%CATALINA_HOME%" == "" goto gotHome
-set "CATALINA_HOME=%CURRENT_DIR%"
+set CATALINA_HOME=.
 if exist "%CATALINA_HOME%\bin\tool-wrapper.bat" goto okHome
-cd ..
-set "CATALINA_HOME=%cd%"
-cd "%CURRENT_DIR%"
+set CATALINA_HOME=..
 :gotHome
 if exist "%CATALINA_HOME%\bin\tool-wrapper.bat" goto okHome
 echo The CATALINA_HOME environment variable is not defined correctly

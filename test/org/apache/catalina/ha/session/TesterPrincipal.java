@@ -30,7 +30,6 @@ public class TesterPrincipal implements Principal, Serializable {
         name = theName;
     }
 
-    @Override
     public String getName() {
         return name;
     }

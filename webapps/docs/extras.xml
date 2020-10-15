@@ -35,44 +35,42 @@
 
   <section name="Introduction">
   <p>
-    A number of additional components may be used with Apache Tomcat. These
-    components may be built by users should they need them or they can be
-    downloaded from one of the mirrors.
+    A number of additional third party components may be used with Apache
+    Tomcat. These components may be built by users should they need them or they
+    can be downloaded from one of the mirrors.
   </p>
 
   </section>
 
   <section name="Downloading">
   <p>
-    To download the extras components open the
-    <a href="http://tomcat.apache.org/download-70.cgi">Tomcat download page</a>
-    and select "Browse" from the Quick Navigation Links. The extras components
-    can be found in bin/extras.
+    To down load the extras components open the Tomcat 6 download page and
+    select "browse" from the Quick Navigation Links. The extras components can be
+    found in bin/extras. 
   </p>
   </section>
-
+  
   <section name="Building">
 
     <p>
-      The additional components are built using the <code>extras</code> target
-      of the standard Tomcat Ant script which is present in the source bundle of
-      Tomcat.
+      The additional components are built using the <code>extras.xml</code> Ant
+      script which is present in the source bundle of Tomcat.
     </p>
-
+    
     <p>The build process is the following:</p>
-
+    
     <ul>
     <li>Follow the <a href="building.html">build instructions</a> to build a
         Tomcat binary from the source bundle (note: it will be used by the build
         process of the additional components, but does not need to be actually
         used later on)</li>
-    <li>Execute the command <code>ant extras</code> to run the build
+    <li>Execute the command <code>ant -f extras.xml</code> to run the build
         script</li>
     <li>The additional components JARs will be placed in the
         <code>output/extras</code> folder</li>
     <li>Refer to the documentation below about the usage of these JARs</li>
     </ul>
-
+	
   </section>
 
   <section name="Components list">
@@ -106,18 +104,6 @@
 
   </subsection>
 
-  <subsection name="JMX Remote Lifecycle Listener">
-
-  <p>
-    The JMX protocol requires the JMX server (Tomcat in this instance) to listen
-    on two network ports. One of these ports can be fixed via configuration but
-    the second is selected randomly. This makes it difficult to use JMX through
-    a firewall. The JMX Remote Lifecycle Listener allows both ports to be fixed,
-    simplifying the process of connecting to JMX through a firewall. See the <a
-    href="config/listeners.html">listeners</a> page for usage instructions.
-  </p>
-
-  </subsection>
   </section>
 
 </body>

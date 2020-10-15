@@ -27,7 +27,10 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
 import org.apache.catalina.realm.GenericPrincipal;
@@ -44,7 +47,7 @@ public class TestSerializablePrincipal  {
 
         File tempDir = new File(System.getProperty("tomcat.test.temp", "output/tmp"));
         if (!tempDir.mkdirs() && !tempDir.isDirectory()) {
-            Assert.fail("Unable to create temporary directory for test");
+            fail("Unable to create temporary directory for test");
         }
 
         // Create the Principal to serialize
@@ -53,7 +56,7 @@ public class TestSerializablePrincipal  {
         roles.add("RoleB");
         TesterPrincipal tpOriginal = new TesterPrincipal("inner");
         GenericPrincipal gpOriginal =
-            new GenericPrincipal("usr", "pwd", roles, tpOriginal);
+            new GenericPrincipal(null, "usr", "pwd", roles, tpOriginal);
 
         // Get a temporary file to use for the serialization test
         File file = null;
@@ -61,32 +64,25 @@ public class TestSerializablePrincipal  {
             file = File.createTempFile("ser", null, tempDir);
         } catch (IOException e) {
             e.printStackTrace();
-            Assert.fail("ioe creating temporary file");
+            fail("ioe creating temporary file");
         }
 
         GenericPrincipal gpNew = null;
         try {
             // Do the serialization
             FileOutputStream fos = null;
-            ObjectOutputStream oos = null;
             try {
                 fos = new FileOutputStream(file);
-                oos = new ObjectOutputStream(fos);
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
                 SerializablePrincipal.writePrincipal(gpOriginal, oos);
+                oos.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-                Assert.fail("fnfe creating object output stream");
+                fail("fnfe creating object output stream");
             } catch (IOException e) {
                 e.printStackTrace();
-                Assert.fail("ioe serializing principal");
+                fail("ioe serializing principal");
             } finally {
-                if (oos != null) {
-                    try {
-                        oos.close();
-                    } catch (IOException ignored) {
-                        // NO OP
-                    }
-                }
                 if (fos != null) {
                     try {
                         fos.close();
@@ -98,28 +94,20 @@ public class TestSerializablePrincipal  {
 
             // De-serialize the Principal
             FileInputStream fis = null;
-            ObjectInputStream ois = null;
             try {
                 fis = new FileInputStream(file);
-                ois = new ObjectInputStream(fis);
-                gpNew = SerializablePrincipal.readPrincipal(ois);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                gpNew = SerializablePrincipal.readPrincipal(ois, null);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-                Assert.fail("fnfe reading object output stream");
+                fail("fnfe reading object output stream");
             } catch (IOException e) {
                 e.printStackTrace();
-                Assert.fail("ioe de-serializing principal");
+                fail("ioe de-serializing principal");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
-                Assert.fail("cnfe de-serializing principal");
+                fail("cnfe de-serializing principal");
             } finally {
-                if (ois != null) {
-                    try {
-                        ois.close();
-                    } catch (IOException ignored) {
-                        // NO OP
-                    }
-                }
                 if (fis != null) {
                     try {
                         fis.close();
@@ -135,20 +123,20 @@ public class TestSerializablePrincipal  {
         }
 
         // Now test how similar original and de-serialized versions are
-        Assert.assertEquals("User names different", gpOriginal.getName(),
+        assertEquals("User names different", gpOriginal.getName(),
                 gpNew.getName());
-        Assert.assertEquals("Passwords different", gpOriginal.getPassword(),
+        assertEquals("Passwords different", gpOriginal.getPassword(),
                 gpNew.getPassword());
-        Assert.assertEquals("Number of roles different", gpOriginal.getRoles().length,
+        assertEquals("Number of roles different", gpOriginal.getRoles().length,
                 gpNew.getRoles().length);
         for (int i = 0; i < gpOriginal.getRoles().length; i++) {
-            Assert.assertEquals("Role name index " + i + "different",
+            assertEquals("Role name index " + i + "different",
                     gpOriginal.getRoles()[i], gpNew.getRoles()[i]);
         }
         // These are the key tests for bug 43840
-        Assert.assertNotSame("Inner principal not present", gpNew,
+        assertNotSame("Inner principal not present", gpNew,
                 gpNew.getUserPrincipal());
-        Assert.assertEquals("Inner user names are different", tpOriginal.getName(),
+        assertEquals("Inner user names are different", tpOriginal.getName(),
                 gpNew.getUserPrincipal().getName());
     }
 

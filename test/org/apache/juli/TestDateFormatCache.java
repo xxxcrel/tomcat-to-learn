@@ -27,8 +27,6 @@ import org.junit.Test;
 
 public class TestDateFormatCache {
 
-    // Note that there is a similar test:
-    // org.apache.catalina.valves.TestAccessLogValve.testBug54044()
     @Test
     public void testBug54044() throws Exception {
 
@@ -43,11 +41,13 @@ public class TestDateFormatCache {
         // Get dfc.cache.cache field
         Object dfcCache;
         Field dfcCacheArray;
-        Field dfcCacheField = dfc.getClass().getDeclaredField("cache");
-        dfcCacheField.setAccessible(true);
-        dfcCache = dfcCacheField.get(dfc);
-        dfcCacheArray = dfcCache.getClass().getDeclaredField("cache");
-        dfcCacheArray.setAccessible(true);
+        {
+            Field dfcCacheField = dfc.getClass().getDeclaredField("cache");
+            dfcCacheField.setAccessible(true);
+            dfcCache = dfcCacheField.get(dfc);
+            dfcCacheArray = dfcCache.getClass().getDeclaredField("cache");
+            dfcCacheArray.setAccessible(true);
+        }
 
         // Create an array to hold the expected values
         String[] expected = new String[cacheSize];

@@ -37,15 +37,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
 import org.apache.catalina.Container;
 import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Manager;
 import org.apache.catalina.Server;
+import org.apache.catalina.ServerFactory;
 import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
@@ -60,21 +63,13 @@ import org.apache.tomcat.util.buf.ByteChunk;
  * don't have to keep writing the cleanup code.
  */
 public abstract class TomcatBaseTest extends LoggingBaseTest {
-
-    // Used by parameterized tests. Defined here to reduce duplication.
-    protected static final Boolean[] booleans = new Boolean[] { Boolean.FALSE, Boolean.TRUE };
-
-    protected static final int DEFAULT_CLIENT_TIMEOUT_MS = 300000;
-
-    public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
-
     private Tomcat tomcat;
     private boolean accessLogEnabled = false;
 
+    public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
+
     /**
-     * Make the Tomcat instance available to sub-classes.
-     *
-     * @return A Tomcat instance without any pre-configured web applications
+     * Make Tomcat instance accessible to sub-classes.
      */
     public Tomcat getTomcatInstance() {
         return tomcat;
@@ -87,7 +82,7 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
         return tomcat.getConnector().getLocalPort();
     }
 
-    /*
+    /**
      * Sub-classes may want to check, whether an AccessLogValve is active
      */
     public boolean isAccessLogEnabled() {
@@ -104,19 +99,25 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
 
         File appBase = new File(getTemporaryDirectory(), "webapps");
         if (!appBase.exists() && !appBase.mkdir()) {
-            Assert.fail("Unable to create appBase for test");
+            fail("Unable to create appBase for test");
         }
+
+        // A sanity check that the Server reference has been cleared after
+        // the previous test run
+        assertNull("A Server has already been created.",
+                ServerFactory.getServer(false));
 
         tomcat = new TomcatWithFastSessionIDs();
 
         String protocol = getProtocol();
         Connector connector = new Connector(protocol);
         // Listen only on localhost
-        Assert.assertTrue(connector.setProperty("address", InetAddress.getByName("localhost").getHostAddress()));
+        connector.setAttribute("address",
+                InetAddress.getByName("localhost").getHostAddress());
         // Use random free port
         connector.setPort(0);
         // Mainly set to reduce timeouts during async tests
-        Assert.assertTrue(connector.setProperty("connectionTimeout", "3000"));
+        connector.setAttribute("connectionTimeout", "3000");
         tomcat.getService().addConnector(connector);
         tomcat.setConnector(connector);
 
@@ -126,6 +127,7 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
             AprLifecycleListener listener = new AprLifecycleListener();
             listener.setSSLRandomSeed("/dev/urandom");
             server.addLifecycleListener(listener);
+            connector.setAttribute("pollerThreadCount", Integer.valueOf(1));
         }
 
         File catalinaBase = getTemporaryDirectory();
@@ -169,17 +171,12 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
     @Override
     public void tearDown() throws Exception {
         try {
-            // Some tests may call tomcat.destroy(), some tests may just call
-            // tomcat.stop(), some not call either method. Make sure that stop()
-            // & destroy() are called as necessary.
-            if (tomcat.server != null
-                    && tomcat.server.getState() != LifecycleState.DESTROYED) {
-                if (tomcat.server.getState() != LifecycleState.STOPPED) {
-                    tomcat.stop();
-                }
+            if (tomcat.server != null) {
+                tomcat.stop();
                 tomcat.destroy();
             }
         } finally {
+            ServerFactory.clear();
             super.tearDown();
         }
     }
@@ -402,7 +399,7 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
 
         private static final long serialVersionUID = 1L;
 
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings({ "deprecation", "unchecked" })
         @Override
         public void service(HttpServletRequest request,
                             HttpServletResponse response)
@@ -412,11 +409,11 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
             StringBuilder value;
             Object attribute;
 
-            response.setContentType("text/plain");
-
             ServletContext ctx = this.getServletContext();
             HttpSession session = request.getSession(false);
             PrintWriter out = response.getWriter();
+
+            response.setContentType("text/plain");
 
             out.println("CONTEXT-NAME: " + ctx.getServletContextName());
             out.println("CONTEXT-PATH: " + ctx.getContextPath());
@@ -607,48 +604,38 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
         return out;
     }
 
-    public static int getUrl(String path, ByteChunk out, Map<String, List<String>> resHead)
-            throws IOException {
+    public static int getUrl(String path, ByteChunk out,
+            Map<String, List<String>> resHead) throws IOException {
         return getUrl(path, out, null, resHead);
     }
 
-    public static int getUrl(String path, ByteChunk out, boolean followRedirects)
-            throws IOException {
-        return methodUrl(path, out, DEFAULT_CLIENT_TIMEOUT_MS, null, null, "GET", followRedirects);
-    }
-
-    public static int headUrl(String path, ByteChunk out, Map<String, List<String>> resHead)
-            throws IOException {
-        return methodUrl(path, out, DEFAULT_CLIENT_TIMEOUT_MS, null, resHead, "HEAD");
-    }
-
-    public static int getUrl(String path, ByteChunk out, Map<String, List<String>> reqHead,
+    public static int headUrl(String path, ByteChunk out,
             Map<String, List<String>> resHead) throws IOException {
-        return getUrl(path, out, DEFAULT_CLIENT_TIMEOUT_MS, reqHead, resHead);
+        return methodUrl(path, out, 1000000, null, resHead, "HEAD");
+    }
+
+    public static int getUrl(String path, ByteChunk out,
+            Map<String, List<String>> reqHead,
+            Map<String, List<String>> resHead) throws IOException {
+        return getUrl(path, out, 1000000, reqHead, resHead);
     }
 
     public static int getUrl(String path, ByteChunk out, int readTimeout,
-            Map<String, List<String>> reqHead, Map<String, List<String>> resHead)
-            throws IOException {
+            Map<String, List<String>> reqHead,
+            Map<String, List<String>> resHead) throws IOException {
         return methodUrl(path, out, readTimeout, reqHead, resHead, "GET");
     }
 
     public static int methodUrl(String path, ByteChunk out, int readTimeout,
-            Map<String, List<String>> reqHead, Map<String, List<String>> resHead, String method)
-            throws IOException {
-        return methodUrl(path, out, readTimeout, reqHead, resHead, method, true);
-    }
-
-    public static int methodUrl(String path, ByteChunk out, int readTimeout,
-                Map<String, List<String>> reqHead, Map<String, List<String>> resHead, String method,
-                boolean followRedirects) throws IOException {
+            Map<String, List<String>> reqHead,
+            Map<String, List<String>> resHead,
+            String method) throws IOException {
 
         URL url = new URL(path);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setUseCaches(false);
         connection.setReadTimeout(readTimeout);
         connection.setRequestMethod(method);
-        connection.setInstanceFollowRedirects(followRedirects);
         if (reqHead != null) {
             for (Map.Entry<String, List<String>> entry : reqHead.entrySet()) {
                 StringBuilder valueList = new StringBuilder();
@@ -665,13 +652,8 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
         connection.connect();
         int rc = connection.getResponseCode();
         if (resHead != null) {
-            // Skip the entry with null key that is used for the response line
-            // that some Map implementations may not accept.
-            for (Map.Entry<String, List<String>> entry : connection.getHeaderFields().entrySet()) {
-                if (entry.getKey() != null) {
-                    resHead.put(entry.getKey(), entry.getValue());
-                }
-            }
+            Map<String, List<String>> head = connection.getHeaderFields();
+            resHead.putAll(head);
         }
         InputStream is;
         if (rc < 400) {
@@ -802,7 +784,7 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
                             c.setManager(m);
                         }
                         if (m instanceof ManagerBase) {
-                            ((ManagerBase) m).setSecureRandomClass(
+                            ((ManagerBase) m).setRandomClass(
                                     "org.apache.catalina.startup.FastNonSecureRandom");
                         }
                     }

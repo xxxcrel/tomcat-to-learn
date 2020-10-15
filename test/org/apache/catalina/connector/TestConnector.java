@@ -16,60 +16,17 @@
  */
 package org.apache.catalina.connector;
 
-import java.net.SocketTimeoutException;
-
-import org.junit.Assert;
 import org.junit.Test;
 
-import org.apache.catalina.Context;
-import org.apache.catalina.Wrapper;
-import org.apache.catalina.startup.TesterServlet;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
-import org.apache.tomcat.util.buf.ByteChunk;
 
 /**
  * Test cases for {@link Connector}.
  */
 public class TestConnector extends TomcatBaseTest {
-
-    @Test
-    public void testStop() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-
-        // No file system docBase required
-        Context root = tomcat.addContext("", null);
-        Wrapper w =
-            Tomcat.addServlet(root, "tester", new TesterServlet());
-        w.setAsyncSupported(true);
-        root.addServletMapping("/", "tester");
-
-        Connector connector = tomcat.getConnector();
-
-        tomcat.start();
-
-        ByteChunk bc = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort() + "/", bc, null, null);
-
-        Assert.assertEquals(200, rc);
-        Assert.assertEquals("OK", bc.toString());
-
-        rc = -1;
-        bc.recycle();
-
-        connector.stop();
-
-        try {
-            rc = getUrl("http://localhost:" + getPort() + "/", bc, 1000,
-                    null, null);
-        } catch (SocketTimeoutException ste) {
-            // May also see this with NIO
-            // Make sure the test passes if we do
-            rc = 503;
-        }
-        Assert.assertEquals(503, rc);
-    }
-
 
     @Test
     public void testPort() throws Exception {
@@ -78,17 +35,10 @@ public class TestConnector extends TomcatBaseTest {
         Connector connector1 = tomcat.getConnector();
         connector1.setPort(0);
 
-        Connector connector2 = new Connector();
-        connector2.setPort(0);
-
-        tomcat.getService().addConnector(connector2);
-
         tomcat.start();
 
         int localPort1 = connector1.getLocalPort();
-        int localPort2 = connector2.getLocalPort();
 
-        Assert.assertTrue(localPort1 > 0);
-        Assert.assertTrue(localPort2 > 0);
+        assertTrue(localPort1 > 0);
     }
 }

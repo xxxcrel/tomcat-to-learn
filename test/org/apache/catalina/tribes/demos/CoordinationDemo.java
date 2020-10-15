@@ -21,7 +21,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
-import org.apache.catalina.tribes.Channel;
+import org.apache.catalina.tribes.ChannelInterceptor;
+import org.apache.catalina.tribes.ChannelInterceptor.InterceptorEvent;
 import org.apache.catalina.tribes.Member;
 import org.apache.catalina.tribes.group.GroupChannel;
 import org.apache.catalina.tribes.group.interceptors.MessageDispatch15Interceptor;
@@ -31,6 +32,7 @@ import org.apache.catalina.tribes.transport.ReceiverBase;
 import org.apache.catalina.tribes.util.Arrays;
 
 
+
 public class CoordinationDemo {
     static int CHANNEL_COUNT = 5;
     static int SCREEN_WIDTH = 120;
@@ -38,24 +40,23 @@ public class CoordinationDemo {
     static int CLEAR_SCREEN = 30;
     static boolean MULTI_THREAD = false;
     static boolean[] VIEW_EVENTS = new boolean[255];
-    StringBuilder statusLine = new StringBuilder();
+    StringBuffer statusLine = new StringBuffer();
     Status[] status = null;
     BufferedReader reader = null;
     /**
      * Construct and show the application.
      */
     public CoordinationDemo() {
-        // Default constructor
     }
-
+    
     public void init() {
         reader = new BufferedReader(new InputStreamReader(System.in));
         status = new Status[CHANNEL_COUNT];
     }
-
-
+    
+    
     public void clearScreen() {
-        StringBuilder buf = new StringBuilder(700);
+        StringBuffer buf = new StringBuffer(700);
         for (int i=0; i<CLEAR_SCREEN; i++ ) buf.append("\n");
         System.out.println(buf);
     }
@@ -68,7 +69,7 @@ public class CoordinationDemo {
         System.out.println("\tquit");
         System.out.print("Enter command:");
     }
-
+    
     public synchronized void printScreen() {
         clearScreen();
         System.out.println(" ###."+getHeader());
@@ -79,9 +80,9 @@ public class CoordinationDemo {
         System.out.println("\n\n");
         System.out.println("Overall status:"+statusLine);
         printMenuOptions();
-
+        
     }
-
+    
     public String getHeader() {
         //member - 30
         //running- 10
@@ -89,36 +90,31 @@ public class CoordinationDemo {
         //view-id - 24
         //view count - 8
 
-        StringBuilder buf = new StringBuilder();
+        StringBuffer buf = new StringBuffer();
         buf.append(leftfill("Member",30," "));
         buf.append(leftfill("Running",10," "));
         buf.append(leftfill("Coord",30," "));
         buf.append(leftfill("View-id(short)",24," "));
         buf.append(leftfill("Count",8," "));
         buf.append("\n");
-
+        
         buf.append(rightfill("==="+new java.sql.Timestamp(System.currentTimeMillis()).toString(),SCREEN_WIDTH,"="));
         buf.append("\n");
         return buf.toString();
     }
-
+    
     public String[] tokenize(String line) {
         StringTokenizer tz = new StringTokenizer(line," ");
         String[] result = new String[tz.countTokens()];
         for (int i=0; i<result.length; i++ ) result[i] = tz.nextToken();
         return result;
     }
-
+    
     public void waitForInput() throws IOException {
         for ( int i=0; i<status.length; i++ ) status[i] = new Status(this);
         printScreen();
         String l = reader.readLine();
-        String[] args;
-        if (l == null) {
-            args = new String[] {};
-        } else {
-            args = tokenize(l);
-        }
+        String[] args = tokenize(l);
         while ( args.length >= 1 && (!"quit".equalsIgnoreCase(args[0]))) {
             if ("start".equalsIgnoreCase(args[0])) {
                 cmdStart(args);
@@ -128,11 +124,9 @@ public class CoordinationDemo {
             }
             printScreen();
             l = reader.readLine();
-            if (l != null) {
-                args = tokenize(l);
-            }
+            args = tokenize(l);
         }
-        for (Status value : status) value.stop();
+        for ( int i=0; i<status.length; i++ ) status[i].stop();
     }
 
     private void cmdStop(String[] args) {
@@ -142,7 +136,6 @@ public class CoordinationDemo {
             for (int i = 0; i < status.length; i++) {
                 final int j = i;
                 t[j] = new Thread() {
-                    @Override
                     public void run() {
                         status[j].stop();
                     }
@@ -150,7 +143,7 @@ public class CoordinationDemo {
             }
             for (int i = 0; i < status.length; i++) if (MULTI_THREAD ) t[i].start(); else t[i].run();
             setSystemStatus("System stopped.");
-        } else {
+        } else { 
             int index = -1;
             try { index = Integer.parseInt(args[1])-1;}catch ( Exception x ) {setSystemStatus("Invalid index:"+args[1]);}
             if ( index >= 0 ) {
@@ -168,7 +161,6 @@ public class CoordinationDemo {
             for (int i = 0; i < status.length; i++) {
                 final int j = i;
                 t[j] = new Thread() {
-                    @Override
                     public void run() {
                         status[j].start();
                     }
@@ -176,7 +168,7 @@ public class CoordinationDemo {
             }
             for (int i = 0; i < status.length; i++) if (MULTI_THREAD ) t[i].start(); else t[i].run();
             setSystemStatus("System started.");
-        } else {
+        } else { 
             int index = -1;
             try { index = Integer.parseInt(args[1])-1;}catch ( Exception x ) {setSystemStatus("Invalid index:"+args[1]);}
             if ( index >= 0 ) {
@@ -191,8 +183,9 @@ public class CoordinationDemo {
         statusLine.delete(0,statusLine.length());
         statusLine.append(status);
     }
-
-
+    
+    
+    
     public static void setEvents(String events) {
         java.util.Arrays.fill(VIEW_EVENTS,false);
         StringTokenizer t = new StringTokenizer(events,",");
@@ -201,7 +194,7 @@ public class CoordinationDemo {
             VIEW_EVENTS[idx] = true;
         }
     }
-
+    
     public static void run(String[] args,CoordinationDemo demo) throws Exception {
         usage();
         java.util.Arrays.fill(VIEW_EVENTS,true);
@@ -221,7 +214,7 @@ public class CoordinationDemo {
         }
         demo.init();
         demo.waitForInput();
-    }
+    }    
 
     private static void usage() {
         System.out.println("Usage:");
@@ -237,24 +230,24 @@ public class CoordinationDemo {
         CoordinationDemo demo = new CoordinationDemo();
         run(args,demo);
     }
-
+    
     public static String leftfill(String value, int length, String ch) {
         return fill(value,length,ch,true);
     }
-
+    
     public static String rightfill(String value, int length, String ch) {
         return fill(value,length,ch,false);
-    }
+    }    
 
     public static String fill(String value, int length, String ch, boolean left) {
-        StringBuilder buf = new StringBuilder();
+        StringBuffer buf = new StringBuffer();
         if ( !left ) buf.append(value.trim());
         for (int i=value.trim().length(); i<length; i++ ) buf.append(ch);
         if ( left ) buf.append(value.trim());
         return buf.toString();
     }
-
-
+    
+    
     public static class Status {
         public CoordinationDemo parent;
         public GroupChannel channel;
@@ -262,18 +255,18 @@ public class CoordinationDemo {
         public String status;
         public Exception error;
         public String startstatus = "new";
-
+        
         public Status(CoordinationDemo parent) {
             this.parent = parent;
         }
-
+        
         public String getStatusLine() {
             //member - 30
             //running- 10
             //coord - 30
             //view-id - 24
             //view count - 8
-            StringBuilder buf = new StringBuilder();
+            StringBuffer buf = new StringBuffer();
             String local = "";
             String coord = "";
             String viewId = "";
@@ -282,10 +275,8 @@ public class CoordinationDemo {
                 Member lm = channel.getLocalMember(false);
                 local = lm!=null?lm.getName():"";
                 coord = interceptor!=null && interceptor.getCoordinator()!=null?interceptor.getCoordinator().getName():"";
-                if (interceptor != null) {
-                    viewId = getByteString(interceptor.getViewId()!=null?interceptor.getViewId().getBytes():new byte[0]);
-                    count = String.valueOf(interceptor.getView().length);
-                }
+                viewId = getByteString(interceptor.getViewId()!=null?interceptor.getViewId().getBytes():new byte[0]);
+                count = String.valueOf(interceptor.getView().length);
             }
             buf.append(leftfill(local,30," "));
             buf.append(leftfill(startstatus, 10, " "));
@@ -297,18 +288,18 @@ public class CoordinationDemo {
             buf.append("\n");
             return buf.toString();
         }
-
+        
         public String getByteString(byte[] b) {
             if ( b == null ) return "{}";
             return Arrays.toString(b,0,Math.min(b.length,4));
         }
-
+        
         public void start() {
             try {
                 if ( channel == null ) {
                     channel = createChannel();
                     startstatus = "starting";
-                    channel.start(Channel.DEFAULT);
+                    channel.start(channel.DEFAULT);
                     startstatus = "running";
                 } else {
                     status = "Channel already started.";
@@ -317,23 +308,21 @@ public class CoordinationDemo {
                 synchronized (System.err) {
                     System.err.println("Start failed:");
                     StackTraceElement[] els = x.getStackTrace();
-                    for (StackTraceElement el : els) System.err.println(el.toString());
+                    for (int i = 0; i < els.length; i++) System.err.println(els[i].toString());
                 }
                 status = "Start failed:"+x.getMessage();
                 error = x;
                 startstatus = "failed";
-                try { channel.stop(Channel.DEFAULT);}catch(Exception ignore){
-                    // Ignore
-                }
+                try { channel.stop(GroupChannel.DEFAULT);}catch(Exception ignore){}
                 channel = null;
                 interceptor = null;
             }
         }
-
+        
         public void stop() {
             try {
                 if ( channel != null ) {
-                    channel.stop(Channel.DEFAULT);
+                    channel.stop(channel.DEFAULT);
                     status = "Channel Stopped";
                 } else {
                     status = "Channel Already Stopped";
@@ -342,7 +331,7 @@ public class CoordinationDemo {
                 synchronized (System.err) {
                     System.err.println("Stop failed:");
                     StackTraceElement[] els = x.getStackTrace();
-                    for (StackTraceElement el : els) System.err.println(el.toString());
+                    for (int i = 0; i < els.length; i++) System.err.println(els[i].toString());
                 }
 
                 status = "Stop failed:"+x.getMessage();
@@ -353,20 +342,17 @@ public class CoordinationDemo {
                 interceptor = null;
             }
         }
-
+        
         public GroupChannel createChannel() {
             channel = new GroupChannel();
             ((ReceiverBase)channel.getChannelReceiver()).setAutoBind(100);
             interceptor = new NonBlockingCoordinator() {
-                @Override
                 public void fireInterceptorEvent(InterceptorEvent event) {
                     status = event.getEventTypeDesc();
                     int type = event.getEventType();
                     boolean display = VIEW_EVENTS[type];
                     if ( display ) parent.printScreen();
-                    try { Thread.sleep(SLEEP_TIME); }catch ( Exception x){
-                        // Ignore
-                    }
+                    try { Thread.sleep(SLEEP_TIME); }catch ( Exception x){}
                 }
             };
             channel.addInterceptor(interceptor);

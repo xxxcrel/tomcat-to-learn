@@ -20,10 +20,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.fail;
+
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
@@ -47,7 +47,7 @@ public abstract class LoggingBaseTest {
 
     protected Log log;
 
-    private static File tempDir;
+    private File tempDir;
 
     private List<File> deleteOnTearDown = new ArrayList<File>();
 
@@ -62,7 +62,7 @@ public abstract class LoggingBaseTest {
      * is used to access resources that are part of default Tomcat deployment.
      * E.g. the examples webapp.
      */
-    public static File getBuildDirectory() {
+    public File getBuildDirectory() {
         return new File(System.getProperty("tomcat.test.tomcatbuild",
                 "output/build"));
     }
@@ -94,16 +94,13 @@ public abstract class LoggingBaseTest {
         deleteOnTearDown.add(file);
     }
 
-    @BeforeClass
-    public static void setUpPerTestClass() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         // Create catalina.base directory
-        File tempBase = new File(System.getProperty("tomcat.test.temp", "output/tmp"));
-        if (!tempBase.mkdirs() && !tempBase.isDirectory()) {
-            Assert.fail("Unable to create base temporary directory for tests");
+        tempDir = new File(System.getProperty("tomcat.test.temp", "output/tmp"));
+        if (!tempDir.mkdirs() && !tempDir.isDirectory()) {
+            fail("Unable to create temporary directory for test");
         }
-        tempDir = File.createTempFile("test", null, tempBase);
-        Assert.assertTrue(tempDir.delete());
-        Assert.assertTrue(tempDir.mkdirs());
 
         System.setProperty("catalina.base", tempDir.getAbsolutePath());
 
@@ -112,10 +109,7 @@ public abstract class LoggingBaseTest {
                 "org.apache.juli.ClassLoaderLogManager");
         System.setProperty("java.util.logging.config.file", new File(
                 getBuildDirectory(), "conf/logging.properties").toString());
-    }
 
-    @Before
-    public void setUp() throws Exception {
         // Get log instance after logging has been configured
         log = LogFactory.getLog(getClass());
         log.info("Starting test case [" + testName.getMethodName() + "]");

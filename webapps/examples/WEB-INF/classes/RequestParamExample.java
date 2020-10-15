@@ -15,14 +15,10 @@
 * limitations under the License.
 */
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ResourceBundle;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.util.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
 
 import util.HTMLFilter;
 
@@ -34,36 +30,32 @@ import util.HTMLFilter;
 
 public class RequestParamExample extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
 
-    @Override
+    ResourceBundle rb = ResourceBundle.getBundle("LocalStrings");
+    
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response)
         throws IOException, ServletException
     {
-        ResourceBundle rb = ResourceBundle.getBundle("LocalStrings",request.getLocale());
-
         response.setContentType("text/html");
-        response.setCharacterEncoding("UTF-8");
 
         PrintWriter out = response.getWriter();
-        out.println("<!DOCTYPE html><html>");
+        out.println("<html>");
         out.println("<head>");
-        out.println("<meta charset=\"UTF-8\" />");
 
         String title = rb.getString("requestparams.title");
         out.println("<title>" + title + "</title>");
         out.println("</head>");
         out.println("<body bgcolor=\"white\">");
 
-        // img stuff not req'd for source code HTML showing
+        // img stuff not req'd for source code html showing
 
-       // all links relative
+	// all links relative
 
         // XXX
         // making these absolute till we work out the
-        // addition of a PathInfo issue
-
+        // addition of a PathInfo issue 
+	
         out.println("<a href=\"../reqparams.html\">");
         out.println("<img src=\"../images/code.gif\" height=24 " +
                     "width=24 align=right border=0 alt=\"view code\"></a>");
@@ -100,7 +92,6 @@ public class RequestParamExample extends HttpServlet {
         out.println("</html>");
     }
 
-    @Override
     public void doPost(HttpServletRequest request,
                       HttpServletResponse response)
         throws IOException, ServletException

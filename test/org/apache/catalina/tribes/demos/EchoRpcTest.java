@@ -18,12 +18,12 @@ package org.apache.catalina.tribes.demos;
 
 import java.io.Serializable;
 
+import org.apache.catalina.tribes.Member;
+import org.apache.catalina.tribes.group.RpcCallback;
 import org.apache.catalina.tribes.Channel;
 import org.apache.catalina.tribes.ManagedChannel;
-import org.apache.catalina.tribes.Member;
-import org.apache.catalina.tribes.group.Response;
-import org.apache.catalina.tribes.group.RpcCallback;
 import org.apache.catalina.tribes.group.RpcChannel;
+import org.apache.catalina.tribes.group.Response;
 
 
 /**
@@ -37,7 +37,7 @@ import org.apache.catalina.tribes.group.RpcChannel;
  * @version 1.0
  */
 public class EchoRpcTest implements RpcCallback, Runnable {
-
+    
     Channel channel;
     int count;
     String message;
@@ -46,7 +46,7 @@ public class EchoRpcTest implements RpcCallback, Runnable {
     int options;
     long timeout;
     String name;
-
+    
     public EchoRpcTest(Channel channel, String name, int count, String message, long pause, int options, long timeout) {
         this.channel = channel;
         this.count = count;
@@ -64,10 +64,9 @@ public class EchoRpcTest implements RpcCallback, Runnable {
      *
      * @param msg Serializable
      * @param sender Member
-     * TODO Implement this org.apache.catalina.tribes.tipis.RpcCallback
+     * @todo Implement this org.apache.catalina.tribes.tipis.RpcCallback
      *   method
      */
-    @Override
     public void leftOver(Serializable msg, Member sender) {
         System.out.println("Received a left over message from ["+sender.getName()+"] with data ["+msg+"]");
     }
@@ -77,16 +76,14 @@ public class EchoRpcTest implements RpcCallback, Runnable {
      * @param msg Serializable
      * @param sender Member
      * @return Serializable - null if no reply should be sent
-     * TODO Implement this org.apache.catalina.tribes.tipis.RpcCallback
+     * @todo Implement this org.apache.catalina.tribes.tipis.RpcCallback
      *   method
      */
-    @Override
     public Serializable replyRequest(Serializable msg, Member sender) {
         System.out.println("Received a reply request message from ["+sender.getName()+"] with data ["+msg+"]");
         return "Reply("+name+"):"+msg;
     }
-
-    @Override
+    
     public void run() {
         long counter = 0;
         while (counter<count) {
@@ -94,18 +91,16 @@ public class EchoRpcTest implements RpcCallback, Runnable {
             try {
                 System.out.println("Sending ["+msg+"]");
                 long start = System.currentTimeMillis();
-                Response[] resp = rpc.send(channel.getMembers(),msg,options,Channel.SEND_OPTIONS_DEFAULT,timeout);
+                Response[] resp = rpc.send(channel.getMembers(),(Serializable)msg,options,Channel.SEND_OPTIONS_DEFAULT,timeout);
                 System.out.println("Send of ["+msg+"] completed. Nr of responses="+resp.length+" Time:"+(System.currentTimeMillis()-start)+" ms.");
-                for (Response response : resp) {
-                    System.out.println("Received a response message from [" + response.getSource().getName() + "] with data [" + response.getMessage() + "]");
+                for ( int i=0; i<resp.length; i++ ) {
+                    System.out.println("Received a response message from ["+resp[i].getSource().getName()+"] with data ["+resp[i].getMessage()+"]");
                 }
-                Thread.sleep(pause);
-            }catch(Exception x){
-                // Ignore
-            }
+            Thread.sleep(pause);
+        }catch(Exception x){}
         }
     }
-
+    
     public static void usage() {
             System.out.println("Tribes RPC tester.");
             System.out.println("Usage:\n\t"+
@@ -127,29 +122,32 @@ public class EchoRpcTest implements RpcCallback, Runnable {
                                "java EchoRpcTest -bind 192.168.0.45 -port 4005\n\t"+
                                "java EchoRpcTest -bind 192.168.0.45 -port 4005 -mbind 192.168.0.45 -count 100 -stats 10\n");
         }
-
+    
         public static void main(String[] args) throws Exception {
+            boolean send = true;
+            boolean debug = false;
             long pause = 3000;
             int count = 1000000;
             int stats = 10000;
             String name = "EchoRpcId";
+            boolean breakOnEx = false;
+            int threads = 1;
             int options = RpcChannel.ALL_REPLY;
             long timeout = 15000;
             String message = "EchoRpcMessage";
-            if (args.length == 0) {
-                usage();
-                System.exit(1);
+            if ( args.length == 0 ) {
+                args = new String[] {"-help"};
             }
             for (int i = 0; i < args.length; i++) {
                 if ("-threads".equals(args[i])) {
-                    // Not used
+                    threads = Integer.parseInt(args[++i]);
                 } else if ("-count".equals(args[i])) {
                     count = Integer.parseInt(args[++i]);
                     System.out.println("Sending "+count+" messages.");
                 } else if ("-pause".equals(args[i])) {
                     pause = Long.parseLong(args[++i])*1000;
                 } else if ("-break".equals(args[i])) {
-                    // Not used
+                    breakOnEx = true;
                 } else if ("-stats".equals(args[i])) {
                     stats = Integer.parseInt(args[++i]);
                     System.out.println("Stats every "+stats+" message");
@@ -164,39 +162,39 @@ public class EchoRpcTest implements RpcCallback, Runnable {
                     else if ( "first".equals(args[i]) ) options = RpcChannel.FIRST_REPLY;
                     else if ( "majority".equals(args[i]) ) options = RpcChannel.MAJORITY_REPLY;
                 } else if ("-debug".equals(args[i])) {
-                    // Not used
-                } else if ("-help".equals(args[i])) {
+                    debug = true;
+                } else if ("-help".equals(args[i])) 
+                {
                     usage();
                     System.exit(1);
                 }
             }
-
-
+    
+    
             ManagedChannel channel = (ManagedChannel)ChannelCreator.createChannel(args);
             EchoRpcTest test = new EchoRpcTest(channel,name,count,message,pause,options,timeout);
-            channel.start(Channel.DEFAULT);
+            channel.start(channel.DEFAULT);
             Runtime.getRuntime().addShutdownHook(new Shutdown(channel));
             test.run();
-
+    
             System.out.println("System test complete, sleeping to let threads finish.");
             Thread.sleep(60*1000*60);
-        }
-
+        } 
+    
         public static class Shutdown extends Thread {
             ManagedChannel channel = null;
             public Shutdown(ManagedChannel channel) {
                 this.channel = channel;
             }
-
-            @Override
+    
             public void run() {
                 System.out.println("Shutting down...");
                 SystemExit exit = new SystemExit(5000);
                 exit.setDaemon(true);
                 exit.start();
                 try {
-                    channel.stop(Channel.DEFAULT);
-
+                    channel.stop(channel.DEFAULT);
+    
                 }catch ( Exception x ) {
                     x.printStackTrace();
                 }
@@ -208,7 +206,6 @@ public class EchoRpcTest implements RpcCallback, Runnable {
             public SystemExit(long delay) {
                 this.delay = delay;
             }
-            @Override
             public void run () {
                 try {
                     Thread.sleep(delay);
@@ -216,6 +213,6 @@ public class EchoRpcTest implements RpcCallback, Runnable {
                     x.printStackTrace();
                 }
                 System.exit(0);
-
+    
             }
     }}

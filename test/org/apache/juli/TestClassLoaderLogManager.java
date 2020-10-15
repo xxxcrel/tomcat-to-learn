@@ -74,8 +74,8 @@ public class TestClassLoaderLogManager {
             // Ignore
         }
 
-        for (LoggerCreateThread createThread : createThreads) {
-            createThread.setRunning(false);
+        for (int i = 0; i < createThreads.length; i ++) {
+            createThreads[i].setRunning(false);
         }
 
         Assert.assertTrue(listThread.isRunning());

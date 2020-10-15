@@ -16,23 +16,42 @@
  */
 package org.apache.catalina.tribes.io;
 
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestXByteBuffer {
 
-    @Test
-    public void testEmptyArray() throws Exception {
-        Object obj = XByteBuffer.deserialize(new byte[0]);
-        Assert.assertNull(obj);
-    }
+    // In Tomcat 6 the testEmptyArray() test fails with a java.io.EOFException.
+    //
+    // Backporting r1143022 (support for 0-length array in deserialize())
+    // to Tomcat 6 is probably a bad idea, as
+    //
+    // 1. All valid use cases already check for (length == 0) case before
+    // calling deserialize(), so adding a second check there is redundant
+    //
+    // 2. It will change behaviour of GroupChannel.messageReceived(),
+    // as deserialize() call there will no longer fail with an exception.
+    //
+    // The change will be that instead of logging an error and returning
+    // doing nothing, the messageReceived() method will go on and will notify
+    // a channelListener. I do not know whether the listener is able to handle
+    // a null argument.
+    //
+    // @Test
+    // public void testEmptyArray() throws Exception {
+    //   Object obj = XByteBuffer.deserialize(new byte[0]);
+    //   assertNull(obj);
+    // }
 
     @Test
     public void testSerializationString() throws Exception {
         String test = "This is as test.";
         byte[] msg = XByteBuffer.serialize(test);
         Object obj = XByteBuffer.deserialize(msg);
-        Assert.assertTrue(obj instanceof String);
-        Assert.assertEquals(test, obj);
+        assertTrue(obj instanceof String);
+        assertEquals(test, obj);
     }
+
 }

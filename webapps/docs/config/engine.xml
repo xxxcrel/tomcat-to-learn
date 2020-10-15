@@ -59,14 +59,14 @@
     <attributes>
 
       <attribute name="backgroundProcessorDelay" required="false">
-        <p>This value represents the delay in seconds between the
-        invocation of the backgroundProcess method on this engine and
-        its child containers, including all hosts and contexts.
-        Child containers will not be invoked if their delay value is not
-        negative (which would mean they are using their own processing
-        thread). Setting this to a positive value will cause
-        a thread to be spawn. After waiting the specified amount of time,
-        the thread will invoke the backgroundProcess method on this engine
+        <p>This value represents the delay in seconds between the 
+        invocation of the backgroundProcess method on this engine and 
+        its child containers, including all hosts and contexts. 
+        Child containers will not be invoked if their delay value is not 
+        negative (which would mean they are using their own processing 
+        thread). Setting this to a positive value will cause 
+        a thread to be spawn. After waiting the specified amount of time, 
+        the thread will invoke the backgroundProcess method on this engine 
         and all its child containers. If not specified, the default value for
         this attribute is 10, which represent a 10 seconds delay.</p>
       </attribute>
@@ -89,16 +89,10 @@
       <attribute name="jvmRoute" required="false">
         <p>Identifier which must be used in load balancing scenarios to enable
         session affinity. The identifier, which must be unique across all
-        Tomcat servers which participate in the cluster, will be appended to
+        Tomcat 6 servers which participate in the cluster, will be appended to
         the generated session identifier, therefore allowing the front end
-        proxy to always forward a particular session to the same Tomcat
+        proxy to always forward a particular session to the same Tomcat 6
         instance.</p>
-        <p>
-            Note that the <code>jvmRoute</code> can also be set using the
-            <code>jvmRoute</code> system property. The <code>jvmRoute</code>
-            set in an <code>&lt;Engine&gt;</code> attribute will override
-            any <code>jvmRoute</code> system property.
-        </p>
       </attribute>
 
       <attribute name="name" required="true">
@@ -106,17 +100,6 @@
         using multiple <a href="service.html">Service</a> elements in the same
         <a href="server.html">Server</a>, each Engine MUST be assigned a unique
         name.</em></p>
-      </attribute>
-
-      <attribute name="startStopThreads" required="false">
-        <p>The number of threads this <strong>Engine</strong> will use to start
-        child <a href="host.html">Host</a> elements in parallel. The special
-        value of 0 will result in the value of
-        <code>Runtime.getRuntime().availableProcessors()</code> being used.
-        Negative values will result in
-        <code>Runtime.getRuntime().availableProcessors() + value</code> being
-        used unless this is less than 1 in which case 1 thread will be used. If
-        not specified, the default value of 1 will be used. </p>
       </attribute>
 
     </attributes>
@@ -170,7 +153,7 @@
 
   <subsection name="Logging">
 
-    <p>An engine is associated with the
+    <p>An engine is associated with the 
        <code>org.apache.catalina.core.ContainerBase.[enginename]</code>
        log category.  Note that the brackets are actually part of the name,
        don't omit them.</p>
@@ -192,15 +175,17 @@
     <a href="host.html">Host</a>, or <a href="context.html">Context</a>
     by nesting a <a href="valve.html">Valve</a> element like this:</p>
 
-<source><![CDATA[<Engine name="Standalone" ...>
+<source>
+&lt;Engine name="Standalone" ...&gt;
   ...
-  <Valve className="org.apache.catalina.valves.AccessLogValve"
+  &lt;Valve className="org.apache.catalina.valves.AccessLogValve"
          prefix="catalina_access_log." suffix=".txt"
-         pattern="common"/>
+         pattern="common"/&gt;
   ...
-</Engine>]]></source>
+&lt;/Engine&gt;
+</source>
 
-    <p>See <a href="valve.html#Access_Logging">Access Logging Valves</a>
+    <p>See <a href="valve.html#Access Log Valve">Access Log Valve</a>
     for more information on the configuration attributes that are
     supported.</p>
 
@@ -217,11 +202,13 @@
     it will be notified about the occurrence of the corresponding
     lifecycle events.  Configuration of such a listener looks like this:</p>
 
-<source><![CDATA[<Engine name="Standalone" ...>
+<source>
+&lt;Engine name="Standalone" ...&gt;
   ...
-  <Listener className="com.mycompany.mypackage.MyListener" ... >
+  &lt;Listener className="com.mycompany.mypackage.MyListener" ... &gt;
   ...
-</Engine>]]></source>
+&lt;/Engine&gt;
+</source>
 
     <p>Note that a Listener can have any number of additional properties
     that may be configured from this element.  Attribute names are matched
@@ -237,23 +224,25 @@
     incoming request directed to the surrounding
     <a href="engine.html">Engine</a>, <a href="host.html">Host</a>, or
     <a href="context.html">Context</a> element.  The remote address or name
-    will be checked against configured "accept" and/or "deny"
+    will be checked against a configured list of "accept" and/or "deny"
     filters, which are defined using <code>java.util.regex</code> Regular
     Expression syntax.  Requests that come from locations that are
     not accepted will be rejected with an HTTP "Forbidden" error.
     Example filter declarations:</p>
 
-<source><![CDATA[<Engine name="Standalone" ...>
+<source>
+&lt;Engine name="Standalone" ...&gt;
   ...
-  <Valve className="org.apache.catalina.valves.RemoteHostValve"
-         allow=".*\.mycompany\.com|www\.yourcompany\.com"/>
-  <Valve className="org.apache.catalina.valves.RemoteAddrValve"
-         deny="192\.168\.1\.\d+"/>
+  &lt;Valve className="org.apache.catalina.valves.RemoteHostValve"
+         allow=".*\.mycompany\.com|www\.yourcompany\.com"/&gt;
+  &lt;Valve className="org.apache.catalina.valves.RemoteAddrValve"
+         deny="192\.168\.1\.\d+"/&gt;
   ...
-</Engine>]]></source>
+&lt;/Engine&gt;
+</source>
 
-  <p>See <a href="valve.html#Remote_Address_Filter">Remote Address Filter</a>
-  and <a href="valve.html#Remote_Host_Filter">Remote Host Filter</a> for
+  <p>See <a href="valve.html#Remote Address Filter">Remote Address Filter</a>
+  and <a href="valve.html#Remote Host Filter">Remote Host Filter</a> for
   more information about the configuration options that are supported.</p>
 
   </subsection>

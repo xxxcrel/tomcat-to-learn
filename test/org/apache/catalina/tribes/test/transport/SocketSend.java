@@ -17,21 +17,20 @@
 package org.apache.catalina.tribes.test.transport;
 
 import java.io.OutputStream;
-import java.math.BigDecimal;
 import java.net.Socket;
 import java.text.DecimalFormat;
-
-import org.apache.catalina.tribes.Channel;
+import org.apache.catalina.tribes.membership.MemberImpl;
+import org.apache.catalina.tribes.io.XByteBuffer;
 import org.apache.catalina.tribes.Member;
 import org.apache.catalina.tribes.io.ChannelData;
-import org.apache.catalina.tribes.io.XByteBuffer;
-import org.apache.catalina.tribes.membership.MemberImpl;
+import org.apache.catalina.tribes.Channel;
+import java.math.BigDecimal;
 
 public class SocketSend {
 
     public static void main(String[] args) throws Exception {
-
-
+        
+        
         Member mbr = new MemberImpl("localhost", 9999, 0);
         ChannelData data = new ChannelData();
         data.setOptions(Channel.SEND_OPTIONS_BYTE_MESSAGE);
@@ -62,9 +61,9 @@ public class SocketSend {
                 System.out.println("Throughput "+df.format(mb/seconds)+" MB/seconds messages "+count+", total "+mb+" MB, total "+total+" bytes.");
             }
         }
-        out.flush();
+        out.flush(); 
         System.out.println("Complete, sleeping 5 seconds");
         Thread.sleep(5000);
-        socket.close();
+
     }
 }

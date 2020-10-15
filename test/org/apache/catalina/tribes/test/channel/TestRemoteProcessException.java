@@ -21,12 +21,13 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.catalina.tribes.Channel;
 import org.apache.catalina.tribes.ChannelException;
 import org.apache.catalina.tribes.ChannelListener;
 import org.apache.catalina.tribes.ManagedChannel;
@@ -35,12 +36,12 @@ import org.apache.catalina.tribes.TesterUtil;
 import org.apache.catalina.tribes.group.GroupChannel;
 
 /**
- * <p>Title: </p>
- *
- * <p>Description: </p>
- *
+ * <p>Title: </p> 
+ * 
+ * <p>Description: </p> 
+ * 
  * <p>Company: </p>
- *
+ * 
  * @author not attributable
  * @version 1.0
  */
@@ -57,14 +58,14 @@ public class TestRemoteProcessException {
         listener1 = new Listener();
         channel2.addChannelListener(listener1);
         TesterUtil.addRandomDomain(new ManagedChannel[] {channel1, channel2});
-        channel1.start(Channel.DEFAULT);
-        channel2.start(Channel.DEFAULT);
+        channel1.start(GroupChannel.DEFAULT);
+        channel2.start(GroupChannel.DEFAULT);
     }
 
     @After
     public void tearDown() throws Exception {
-        channel1.stop(Channel.DEFAULT);
-        channel2.stop(Channel.DEFAULT);
+        channel1.stop(GroupChannel.DEFAULT);
+        channel2.stop(GroupChannel.DEFAULT);
     }
 
     @Test
@@ -76,10 +77,10 @@ public class TestRemoteProcessException {
             try {
                 channel1.send(channel1.getMembers(),
                         Data.createRandomData(error),
-                        Channel.SEND_OPTIONS_SYNCHRONIZED_ACK
-                                | Channel.SEND_OPTIONS_USE_ACK);
+                        GroupChannel.SEND_OPTIONS_SYNCHRONIZED_ACK
+                                | GroupChannel.SEND_OPTIONS_USE_ACK);
                 if (error) {
-                    Assert.fail("A ChannelException was expected");
+                    fail("A ChannelException was expected");
                 }
             } catch (ChannelException e) {
                 if (!error) {
@@ -94,10 +95,10 @@ public class TestRemoteProcessException {
         // as it is being re-sent. Thus the listener1 count is off by +2.
         final int duplicate = 2;
 
-        Assert.assertEquals("Checking failure messages.", errC + duplicate,
+        assertEquals("Checking failure messages.", errC + duplicate,
                 listener1.errCnt);
-        Assert.assertEquals("Checking success messages.", nerrC, listener1.noErrCnt);
-        Assert.assertEquals("Checking all messages.", msgCount + duplicate,
+        assertEquals("Checking success messages.", nerrC, listener1.noErrCnt);
+        assertEquals("Checking all messages.", msgCount + duplicate,
                 listener1.noErrCnt + listener1.errCnt);
         System.out.println("Listener 1 stats:");
         listener1.printStats(System.out);
@@ -106,12 +107,10 @@ public class TestRemoteProcessException {
     public static class Listener implements ChannelListener {
         long noErrCnt = 0;
         long errCnt = 0;
-        @Override
         public boolean accept(Serializable s, Member m) {
             return (s instanceof Data);
         }
 
-        @Override
         public void messageReceived(Serializable s, Member m) {
             Data d = (Data)s;
             if ( !Data.verify(d) ) {
@@ -123,10 +122,11 @@ public class TestRemoteProcessException {
                         printStats(System.err);
                     }
                     throw new IllegalArgumentException();
-                }
-                noErrCnt++;
-                if ( (noErrCnt % 100) == 0) {
-                    printStats(System.err);
+                } else {
+                    noErrCnt++;
+                    if ( (noErrCnt % 100) == 0) {
+                        printStats(System.err);
+                    }
                 }
             }
         }

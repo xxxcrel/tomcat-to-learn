@@ -29,27 +29,21 @@
 
   <!-- Defined parameters (overrideable) -->
   <xsl:param    name="home-name"           select="'The Tomcat Project'"/>
-  <xsl:param    name="home-href"           select="'https://tomcat.apache.org/'"/>
+  <xsl:param    name="home-href"           select="'http://tomcat.apache.org/'"/>
   <xsl:param    name="home-logo"           select="'/images/tomcat.png'"/>
   <xsl:param    name="printer-logo"        select="'/images/printer.gif'"/>
   <xsl:param    name="apache-logo"         select="'/images/asf-logo.svg'"/>
-  <xsl:param    name="subdir"              select="''"/>
   <xsl:param    name="relative-path"       select="'.'"/>
-  <xsl:param    name="version"             select="'7.0.x'"/>
-  <xsl:param    name="majorversion"        select="'7'"/>
-  <xsl:param    name="majorminorversion"   select="'7.0'"/>
-  <xsl:param    name="minjavaversion"      select="'6'"/>
+  <xsl:param    name="version"             select="'6.0.x'"/>
+  <xsl:param    name="majorversion"        select="'6'"/>
+  <xsl:param    name="majorminorversion"   select="'6.0'"/>
   <xsl:param    name="build-date"          select="'MMM d yyyy'"/>
   <xsl:param    name="year"                select="'yyyy'"/>
   <xsl:param    name="void-image"          select="'/images/void.gif'"/>
   <xsl:param    name="project-menu"        select="'menu'"/>
-  <xsl:param    name="buglink"             select="'https://bz.apache.org/bugzilla/show_bug.cgi?id='"/>
-  <xsl:param    name="revlink"             select="'https://svn.apache.org/viewvc?view=rev&amp;rev='"/>
-  <xsl:param    name="doclink"             select="'https://tomcat.apache.org/tomcat-7.0-doc'"/>
-  <xsl:param    name="sylink"              select="'https://tomcat.apache.org/security-7.html'"/>
-  <xsl:param    name="dllink"              select="'https://tomcat.apache.org/download-70.cgi'"/>
-  <xsl:param    name="sitedir"             select="''"/>
-  <xsl:param    name="filename"            select="'-'"/>
+  <xsl:param    name="buglink"             select="'http://bz.apache.org/bugzilla/show_bug.cgi?id='"/>
+  <xsl:param    name="revlink"             select="'http://svn.apache.org/viewvc?view=rev&amp;rev='"/>
+
   <!-- Defined variables (non-overrideable) -->
   <xsl:variable name="body-bg"          select="'#ffffff'"/>
   <xsl:variable name="body-fg"          select="'#000000'"/>
@@ -74,96 +68,18 @@
       <xsl:variable name="name">
         <xsl:value-of select="."/>
       </xsl:variable>
-      <!--
       <xsl:variable name="email">
         <xsl:value-of select="@email"/>
       </xsl:variable>
-       -->
       <meta name="author" content="{$name}"/>
       <!-- Don't publish e-mail addresses
       <meta name="email" content="{$email}"/>
        -->
     </xsl:for-each>
-<style type="text/css" media="print">
-    .noPrint {display: none;}
-    td#mainBody {width: 100%;}
-</style>
-<style type="text/css"><![CDATA[
-code {background-color:rgb(224,255,255);padding:0 0.1em;}
-code.attributeName, code.propertyName {background-color:transparent;}
-
-
-table {
-  border-collapse: collapse;
-  text-align: left;
-}
-table *:not(table) {
-  /* Prevent border-collapsing for table child elements like <div> */
-  border-collapse: separate;
-}
-
-th {
-  text-align: left;
-}
-
-
-div.codeBox pre code, code.attributeName, code.propertyName, code.noHighlight, .noHighlight code {
-  background-color: transparent;
-}
-div.codeBox {
-  overflow: auto;
-  margin: 1em 0;
-}
-div.codeBox pre {
-  margin: 0;
-  padding: 4px;
-  border: 1px solid #999;
-  border-radius: 5px;
-  background-color: #eff8ff;
-  display: table; /* To prevent <pre>s from taking the complete available width. */
-  /*
-  When it is officially supported, use the following CSS instead of display: table
-  to prevent big <pre>s from exceeding the browser window:
-  max-width: available;
-  width: min-content;
-  */
-}
-
-div.codeBox pre.wrap {
-  white-space: pre-wrap;
-}
-
-
-table.defaultTable tr, table.detail-table tr {
-    border: 1px solid #CCC;
-}
-
-table.defaultTable tr:nth-child(even), table.detail-table tr:nth-child(even) {
-    background-color: #FAFBFF;
-}
-
-table.defaultTable tr:nth-child(odd), table.detail-table tr:nth-child(odd) {
-    background-color: #EEEFFF;
-}
-
-table.defaultTable th, table.detail-table th {
-  background-color: #88b;
-  color: #fff;
-}
-
-table.defaultTable th, table.defaultTable td, table.detail-table th, table.detail-table td {
-  padding: 5px 8px;
-}
-
-
-p.notice {
-    border: 1px solid rgb(255, 0, 0);
-    background-color: rgb(238, 238, 238);
-    color: rgb(0, 51, 102);
-    padding: 0.5em;
-    margin: 1em 2em 1em 1em;
-}
-]]></style>
+		<style type="text/css" media="print">
+			.noPrint {display: none;}
+			td#mainBody {width: 100%;}
+		</style>
     </head>
 
     <body bgcolor="{$body-bg}" text="{$body-fg}" link="{$body-link}"
@@ -225,7 +141,8 @@ p.notice {
 
         <xsl:comment>RIGHT SIDE MAIN BODY</xsl:comment>
         <td width="80%" valign="top" align="left" id="mainBody">
-          <h1><xsl:value-of select="properties/title"/></h1>
+          <h1><xsl:value-of select="project/title"/></h1>
+          <h2><xsl:value-of select="properties/title"/></h2>
           <xsl:apply-templates select="body/section"/>
         </td>
 
@@ -361,7 +278,7 @@ p.notice {
           <xsl:value-of select="@anchor" />
         </xsl:when>
         <xsl:otherwise>
-          <xsl:if test="local-name()='subsection' and
+          <xsl:if test="local-name()='subsection' and 
               count(//*[self::section or self::subsection][@name=current()/@name]) &gt; 1
               ">
             <xsl:value-of select="concat(parent::*[self::section or self::subsection]/@name, '/')"/>
@@ -383,15 +300,48 @@ p.notice {
 
   <!-- Process a source code example -->
   <xsl:template match="source">
-  <div class="codeBox">
-    <pre>
-      <xsl:if test="@wrapped='true'">
-        <xsl:attribute name="class">wrap</xsl:attribute>
-      </xsl:if>
-      <code><xsl:apply-templates/></code>
-    </pre>
-  </div>
+    <xsl:variable name="void">
+      <xsl:value-of select="$relative-path"/><xsl:value-of select="$void-image"/>
+    </xsl:variable>
+    <div align="left">
+      <table cellspacing="4" cellpadding="0" border="0">
+        <tr>
+          <td bgcolor="{$source-color}" width="1" height="1">
+            <img src="{$void}" alt="" width="1" height="1" vspace="0" hspace="0" border="0"/>
+          </td>
+          <td bgcolor="{$source-color}" height="1">
+            <img src="{$void}" alt="" width="1" height="1" vspace="0" hspace="0" border="0"/>
+          </td>
+          <td bgcolor="{$source-color}" width="1" height="1">
+            <img src="{$void}" alt="" width="1" height="1" vspace="0" hspace="0" border="0"/>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="{$source-color}" width="1">
+            <img src="{$void}" alt="" width="1" height="1" vspace="0" hspace="0" border="0"/>
+          </td>
+          <td bgcolor="#ffffff" height="1"><pre>
+            <xsl:value-of select="."/>
+          </pre></td>
+          <td bgcolor="{$source-color}" width="1">
+            <img src="{$void}" alt="" width="1" height="1" vspace="0" hspace="0" border="0"/>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="{$source-color}" width="1" height="1">
+            <img src="{$void}" alt="" width="1" height="1" vspace="0" hspace="0" border="0"/>
+          </td>
+          <td bgcolor="{$source-color}" height="1">
+            <img src="{$void}" alt="" width="1" height="1" vspace="0" hspace="0" border="0"/>
+          </td>
+          <td bgcolor="{$source-color}" width="1" height="1">
+            <img src="{$void}" alt="" width="1" height="1" vspace="0" hspace="0" border="0"/>
+          </td>
+        </tr>
+      </table>
+    </div>
   </xsl:template>
+
 
   <!-- Process an attributes list with nested attribute elements -->
   <xsl:template match="attributes">
@@ -408,10 +358,10 @@ p.notice {
         <tr>
           <td align="left" valign="center">
             <xsl:if test="@required = 'true'">
-              <strong><code class="attributeName"><xsl:value-of select="@name"/></code></strong>
+              <strong><code><xsl:value-of select="@name"/></code></strong>
             </xsl:if>
             <xsl:if test="@required != 'true'">
-              <code class="attributeName"><xsl:value-of select="@name"/></code>
+              <code><xsl:value-of select="@name"/></code>
             </xsl:if>
           </td>
           <td align="left" valign="center">
@@ -436,7 +386,7 @@ p.notice {
       <xsl:for-each select="property">
         <tr>
           <td align="left" valign="center">
-            <code class="propertyName"><xsl:value-of select="@name"/></code>
+            <code><xsl:value-of select="@name"/></code>
           </td>
           <td align="left" valign="center">
             <xsl:apply-templates/>
@@ -536,29 +486,11 @@ p.notice {
       <xsl:variable name="link"><xsl:value-of select="$buglink"/><xsl:value-of select="text()"/></xsl:variable>
       <a href="{$link}"><xsl:apply-templates/></a>
   </xsl:template>
-
+  
   <!-- Link to a SVN revision report -->
   <xsl:template match="rev">
       <xsl:variable name="link"><xsl:value-of select="$revlink"/><xsl:value-of select="text()"/></xsl:variable>
       <a href="{$link}">r<xsl:apply-templates/></a>
-  </xsl:template>
-
-  <!-- Link to online docs -->
-  <xsl:template match="doc">
-      <xsl:variable name="link"><xsl:value-of select="$doclink"/><xsl:value-of select="@path"/></xsl:variable>
-      <a href="{$link}"><xsl:apply-templates/></a>
-  </xsl:template>
-
-  <!-- Link to security page -->
-  <xsl:template match="security">
-      <xsl:variable name="link"><xsl:value-of select="$sylink"/></xsl:variable>
-      <a href="{$link}"><xsl:apply-templates/></a>
-  </xsl:template>
-
-  <!-- Link to download page -->
-  <xsl:template match="download">
-      <xsl:variable name="link"><xsl:value-of select="$dllink"/></xsl:variable>
-      <a href="{$link}"><xsl:apply-templates/></a>
   </xsl:template>
 
   <!-- Version numbers -->
@@ -567,9 +499,6 @@ p.notice {
   </xsl:template>
   <xsl:template match="version-major">
     <xsl:value-of select="$majorversion"/>
-  </xsl:template>
-  <xsl:template match="min-java-version">
-    <xsl:value-of select="$minjavaversion"/>
   </xsl:template>
 
   <!-- specially process td tags ala site.vsl -->

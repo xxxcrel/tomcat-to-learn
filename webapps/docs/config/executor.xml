@@ -35,14 +35,14 @@
 
 <section name="Introduction">
 
-  <p>The <strong>Executor</strong> represents a thread pool that can be shared
+  <p>The <strong>Executor</strong> represents a thread pool that can be shared 
      between components in Tomcat. Historically there has been a thread pool per
-     connector created but this allows you to share a thread pool, between (primarily) connector
+     connector created but this allows you to share a thread pool, between (primarly) connector
      but also other components when those get configured to support executors</p>
 
 
   <p>The executor has to implement the <code>org.apache.catalina.Executor</code> interface.</p>
-
+  
   <p>The executor is a nested element to the <a href="service.html">Service</a> element.
      And in order for it to be picked up by the connectors, the Executor element has to appear
      prior to the Connector element in server.xml</p>
@@ -57,9 +57,9 @@
   support the following attributes:</p>
 
   <attributes>
-
+ 
     <attribute name="className" required="false">
-      <p>The class of the implementation. The implementation has to implement the
+      <p>The class of the implementation. The implementation has to implement the 
          <code>org.apache.catalina.Executor</code> interface.
          This interface ensures that the object can be referenced through its <code>name</code> attribute
          and that implements Lifecycle, so that it can be started and stopped with the container.
@@ -97,7 +97,7 @@
       <p>(int) The max number of active threads in this pool, default is <code>200</code></p>
     </attribute>
     <attribute name="minSpareThreads" required="false">
-      <p>(int) The minimum number of threads (idle and active) always kept alive, default is <code>25</code></p>
+      <p>(int) The minimum number of threads always kept alive, default is <code>25</code></p>
     </attribute>
     <attribute name="maxIdleTime" required="false">
       <p>(int) The number of milliseconds before an idle thread shutsdown, unless the number of active threads are less
@@ -106,17 +106,6 @@
     <attribute name="maxQueueSize" required="false">
       <p>(int) The maximum number of runnable tasks that can queue up awaiting
         execution before we reject them. Default value is <code>Integer.MAX_VALUE</code></p>
-    </attribute>
-    <attribute name="prestartminSpareThreads" required="false">
-      <p>(boolean) Whether minSpareThreads should be started when starting the Executor or not,
-          the default is <code>false</code></p>
-    </attribute>
-    <attribute name="threadRenewalDelay" required="false">
-      <p>(long) If a <a href="listeners.html">ThreadLocalLeakPreventionListener</a> is configured,
-        it will notify this executor about stopped contexts.
-        After a context is stopped, threads in the pool are renewed. To avoid renewing all threads at the same time,
-        this option sets a delay between renewal of any 2 threads. The value is in ms,
-        default value is <code>1000</code> ms. If value is negative, threads are not renewed.</p>
     </attribute>
   </attributes>
 

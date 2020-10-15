@@ -18,8 +18,9 @@ package org.apache.catalina.tribes.group;
 
 import java.util.ArrayList;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,11 +65,11 @@ public class TestGroupChannelMemberArrival {
             };
             threads[i] = t;
         }
-        for (Thread thread : threads) {
-            thread.start();
+        for (int i = 0; i < threads.length; i++) {
+            threads[i].start();
         }
-        for (Thread thread : threads) {
-            thread.join();
+        for (int i = 0; i < threads.length; i++) {
+            threads[i].join();
         }
         Thread.sleep(5000);
         System.out.println(System.currentTimeMillis()
@@ -76,7 +77,7 @@ public class TestGroupChannelMemberArrival {
         for (int i = listeners.length - 1; i >= 0; i--) {
             TestMbrListener listener = listeners[i];
             synchronized (listener.members) {
-                Assert.assertEquals("Checking member arrival length (" + listener.name
+                assertEquals("Checking member arrival length (" + listener.name
                         + ")", channels.length - 1, listener.members.size());
             }
         }
@@ -87,9 +88,9 @@ public class TestGroupChannelMemberArrival {
     @After
     public void tearDown() throws Exception {
 
-        for (ManagedChannel channel : channels) {
+        for (int i = 0; i < channels.length; i++) {
             try {
-                channel.stop(Channel.DEFAULT);
+                channels[i].stop(Channel.DEFAULT);
             } catch (Exception ignore) {
                 // Ignore
             }
@@ -103,9 +104,8 @@ public class TestGroupChannelMemberArrival {
             this.name = name;
         }
 
-        public ArrayList<Member> members = new ArrayList<Member>(1);
+        public ArrayList<Member> members = new ArrayList<Member>();
 
-        @Override
         public void memberAdded(Member member) {
             String msg;
             int count;
@@ -121,7 +121,6 @@ public class TestGroupChannelMemberArrival {
             report(msg, member, count);
         }
 
-        @Override
         public void memberDisappeared(Member member) {
             String msg;
             int count;

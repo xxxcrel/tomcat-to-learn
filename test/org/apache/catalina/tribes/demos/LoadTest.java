@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,14 @@ import java.io.Serializable;
 import java.util.Random;
 
 import org.apache.catalina.tribes.ByteMessage;
-import org.apache.catalina.tribes.Channel;
 import org.apache.catalina.tribes.ChannelException;
 import org.apache.catalina.tribes.ChannelListener;
 import org.apache.catalina.tribes.ManagedChannel;
 import org.apache.catalina.tribes.Member;
 import org.apache.catalina.tribes.MembershipListener;
+import org.apache.catalina.tribes.io.XByteBuffer;
+import org.apache.catalina.tribes.Channel;
+import java.io.Externalizable;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
@@ -41,11 +43,11 @@ import org.apache.juli.logging.LogFactory;
  * @version 1.0
  */
 public class LoadTest implements MembershipListener,ChannelListener, Runnable {
-    private static final Log log = LogFactory.getLog(LoadTest.class);
+    protected static Log log = LogFactory.getLog(LoadTest.class);
     public static int size = 24000;
     public static Object mutex = new Object();
     public boolean doRun = true;
-
+    
     public long bytesReceived = 0;
     public float mBytesReceived = 0;
     public int  messagesReceived = 0;
@@ -59,34 +61,34 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
     public boolean async = false;
     public long receiveStart = 0;
     public int channelOptions = Channel.SEND_OPTIONS_DEFAULT;
-
+    
     static int messageSize = 0;
-
+    
     public static long messagesSent = 0;
     public static long messageStartSendTime = 0;
     public static long messageEndSendTime = 0;
     public static int  threadCount = 0;
-
+    
     public static synchronized void startTest() {
         threadCount++;
         if ( messageStartSendTime == 0 ) messageStartSendTime = System.currentTimeMillis();
     }
-
+    
     public static synchronized void endTest() {
         threadCount--;
         if ( messageEndSendTime == 0 && threadCount==0 ) messageEndSendTime = System.currentTimeMillis();
     }
 
-
+    
     public static synchronized long addSendStats(long count) {
         messagesSent+=count;
         return 0l;
-    }
-
+    }    
+    
     private static void printSendStats(long counter, int messageSize) {
-        float cnt = counter;
-        float size = messageSize;
-        float time = (System.currentTimeMillis()-messageStartSendTime) / 1000f;
+        float cnt = (float)counter;
+        float size = (float)messageSize;
+        float time = (float)(System.currentTimeMillis()-messageStartSendTime) / 1000f;
         log.info("****SEND STATS-"+Thread.currentThread().getName()+"*****"+
                  "\n\tMessage count:"+counter+
                  "\n\tTotal bytes  :"+(long)(size*cnt)+
@@ -95,8 +97,9 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
                  "\n\tMBytes/second:"+(size*cnt/time/1024f/1024f));
     }
 
-
-    public LoadTest(ManagedChannel channel,
+    
+    
+    public LoadTest(ManagedChannel channel, 
                     boolean send,
                     int msgCount,
                     boolean debug,
@@ -111,15 +114,16 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
         this.statsInterval = stats;
         this.breakonChannelException = breakOnEx;
     }
-
-
-    @Override
+    
+    
+    
     public void run() {
-
+        
         long counter = 0;
         long total = 0;
         LoadMessage msg = new LoadMessage();
-
+        int messageSize = LoadTest.messageSize;
+        
         try {
             startTest();
             while (total < msgCount) {
@@ -147,7 +151,7 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
                         if ( debug ) log.error("Unable to send message:"+x.getMessage(),x);
                         log.error("Unable to send message:"+x.getMessage());
                         ChannelException.FaultyMember[] faulty = x.getFaultyMembers();
-                        for (ChannelException.FaultyMember faultyMember : faulty) log.error("Faulty: " + faultyMember);
+                        for (int i=0; i<faulty.length; i++ ) log.error("Faulty: "+faulty[i]);
                         --counter;
                         if ( this.breakonChannelException ) throw x;
                     }
@@ -158,7 +162,7 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
                     //print from the global counter
                     //printSendStats(LoadTest.messagesSent, LoadTest.messageSize, LoadTest.messageSendTime);
                     printSendStats(LoadTest.messagesSent, LoadTest.messageSize);
-
+                    
                 }
 
             }
@@ -170,15 +174,15 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
         endTest();
     }
 
+    
 
     /**
      * memberAdded
      *
      * @param member Member
-     * TODO Implement this org.apache.catalina.tribes.MembershipListener
+     * @todo Implement this org.apache.catalina.tribes.MembershipListener
      *   method
      */
-    @Override
     public void memberAdded(Member member) {
         log.info("Member added:"+member);
         synchronized (mutex) {
@@ -190,42 +194,39 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
      * memberDisappeared
      *
      * @param member Member
-     * TODO Implement this org.apache.catalina.tribes.MembershipListener
+     * @todo Implement this org.apache.catalina.tribes.MembershipListener
      *   method
      */
-    @Override
     public void memberDisappeared(Member member) {
         log.info("Member disappeared:"+member);
     }
-
-    @Override
-    public boolean accept(Serializable msg, Member mbr){
+    
+    public boolean accept(Serializable msg, Member mbr){ 
        return (msg instanceof LoadMessage) || (msg instanceof ByteMessage);
     }
-
-    @Override
-    public void messageReceived(Serializable msg, Member mbr){
+    
+    public void messageReceived(Serializable msg, Member mbr){ 
         if ( receiveStart == 0 ) receiveStart = System.currentTimeMillis();
         if ( debug ) {
             if ( msg instanceof LoadMessage ) {
                 printArray(((LoadMessage)msg).getMessage());
             }
         }
-
+        
         if ( msg instanceof ByteMessage && !(msg instanceof LoadMessage)) {
             LoadMessage tmp = new LoadMessage();
             tmp.setMessage(((ByteMessage)msg).getMessage());
             msg = tmp;
             tmp = null;
         }
-
-
+        
+        
         bytesReceived+=((LoadMessage)msg).getMessage().length;
-        mBytesReceived+=(((LoadMessage)msg).getMessage().length)/1024f/1024f;
+        mBytesReceived+=((float)((LoadMessage)msg).getMessage().length)/1024f/1024f;
         messagesReceived++;
         if ( (messagesReceived%statsInterval)==0 || (messagesReceived==msgCount)) {
-            float bytes = (((LoadMessage)msg).getMessage().length*messagesReceived);
-            float seconds = (System.currentTimeMillis()-receiveStart) / 1000f;
+            float bytes = (float)(((LoadMessage)msg).getMessage().length*messagesReceived);
+            float seconds = ((float)(System.currentTimeMillis()-receiveStart)) / 1000f;
             log.info("****RECEIVE STATS-"+Thread.currentThread().getName()+"*****"+
                      "\n\tMessage count :"+(long)messagesReceived+
                      "\n\tMessage/sec   :"+messagesReceived/seconds+
@@ -237,49 +238,56 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
 
         }
     }
-
-
+    
+    
     public static void printArray(byte[] data) {
         System.out.print("{");
-        for (byte datum : data) {
-            System.out.print(datum);
+        for (int i=0; i<data.length; i++ ) {
+            System.out.print(data[i]);
             System.out.print(",");
         }
         System.out.println("} size:"+data.length);
     }
 
-
-    public static class LoadMessage extends ByteMessage {
-
+    
+    
+    //public static class LoadMessage implements Serializable  {
+    public static class LoadMessage extends ByteMessage  implements Serializable {
+        
         public static byte[] outdata = new byte[size];
         public static Random r = new Random();
         public static int getMessageSize (LoadMessage msg) {
-            return msg.getMessage().length;
+            int messageSize = msg.getMessage().length;
+            if ( ((Object)msg) instanceof ByteMessage ) return messageSize;
+            try {
+                messageSize  = XByteBuffer.serialize(new LoadMessage()).length;
+                log.info("Average message size:" + messageSize + " bytes");
+            } catch (Exception x) {
+                log.error("Unable to calculate test message size.", x);
+            }
+            return messageSize;
         }
         static {
             r.nextBytes(outdata);
         }
-
+        
         protected byte[] message = getMessage();
-
+        
         public LoadMessage() {
-            // Default constructor
         }
-
-        @Override
+        
         public byte[] getMessage() {
             if ( message == null ) {
                 message = outdata;
             }
             return message;
         }
-
-        @Override
+        
         public void setMessage(byte[] data) {
             this.message = data;
         }
     }
-
+    
     public static void usage() {
         System.out.println("Tribes Load tester.");
         System.out.println("The load tester can be used in sender or received mode or both");
@@ -304,7 +312,7 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
                            "java LoadTest -bind 192.168.0.45 -port 4005\n\t"+
                            "java LoadTest -bind 192.168.0.45 -port 4005 -mbind 192.168.0.45 -count 100 -stats 10\n");
     }
-
+    
     public static void main(String[] args) throws Exception {
         boolean send = true;
         boolean debug = false;
@@ -347,19 +355,19 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
                 if ( "receive".equals(args[++i]) ) send = false;
             } else if ("-debug".equals(args[i])) {
                 debug = true;
-            } else if ("-help".equals(args[i]))
+            } else if ("-help".equals(args[i])) 
             {
                 usage();
                 System.exit(1);
             }
         }
-
+        
         ManagedChannel channel = (ManagedChannel)ChannelCreator.createChannel(args);
-
+        
         LoadTest test = new LoadTest(channel,send,count,debug,pause,stats,breakOnEx);
         test.channelOptions = channelOptions;
         LoadMessage msg = new LoadMessage();
-
+        
         messageSize = LoadMessage.getMessageSize(msg);
         channel.addChannelListener(test);
         channel.addMembershipListener(test);
@@ -374,26 +382,25 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
             test.channelOptions = channelOptions;
         }
         test.run();
-        if ( shutdown && send ) channel.stop(Channel.DEFAULT);
+        if ( shutdown && send ) channel.stop(channel.DEFAULT);
         System.out.println("System test complete, sleeping to let threads finish.");
         Thread.sleep(60*1000*60);
-    }
-
+    } 
+    
     public static class Shutdown extends Thread {
         ManagedChannel channel = null;
         public Shutdown(ManagedChannel channel) {
             this.channel = channel;
         }
-
-        @Override
+        
         public void run() {
             System.out.println("Shutting down...");
             SystemExit exit = new SystemExit(5000);
             exit.setDaemon(true);
             exit.start();
             try {
-                channel.stop(Channel.DEFAULT);
-
+                channel.stop(channel.DEFAULT);
+                
             }catch ( Exception x ) {
                 x.printStackTrace();
             }
@@ -405,7 +412,6 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
         public SystemExit(long delay) {
             this.delay = delay;
         }
-        @Override
         public void run () {
             try {
                 Thread.sleep(delay);
@@ -416,5 +422,5 @@ public class LoadTest implements MembershipListener,ChannelListener, Runnable {
 
         }
     }
-
+    
 }

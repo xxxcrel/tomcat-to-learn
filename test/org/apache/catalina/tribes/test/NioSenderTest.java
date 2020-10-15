@@ -17,15 +17,15 @@
 package org.apache.catalina.tribes.test;
 
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.util.Iterator;
+import java.nio.channels.Selector;
 
-import org.apache.catalina.tribes.Channel;
-import org.apache.catalina.tribes.Member;
+import org.apache.catalina.tribes.transport.nio.NioSender;
+import org.apache.catalina.tribes.membership.MemberImpl;
 import org.apache.catalina.tribes.io.ChannelData;
 import org.apache.catalina.tribes.io.XByteBuffer;
-import org.apache.catalina.tribes.membership.MemberImpl;
-import org.apache.catalina.tribes.transport.nio.NioSender;
+import org.apache.catalina.tribes.Member;
+import org.apache.catalina.tribes.Channel;
 
 /**
  * <p>Title: </p>
@@ -45,27 +45,22 @@ public class NioSenderTest {
     public NioSenderTest()  {
         // Default constructor
     }
-
+    
     public synchronized int inc() {
         return ++counter;
     }
-
+    
     public synchronized ChannelData getMessage(Member mbr) {
-        String msg = "Thread-"+Thread.currentThread().getName()+" Message:"+inc();
+        String msg = new String("Thread-"+Thread.currentThread().getName()+" Message:"+inc());
         ChannelData data = new ChannelData(true);
         data.setMessage(new XByteBuffer(msg.getBytes(),false));
         data.setAddress(mbr);
-
+        
         return data;
     }
 
     public void init() throws Exception {
-        synchronized (Selector.class) {
-            // Selector.open() isn't thread safe
-            // http://bugs.sun.com/view_bug.do?bug_id=6427854
-            // Affects 1.6.0_29, fixed in 1.7.0_01
-            selector = Selector.open();
-        }
+        selector = Selector.open();
         mbr = new MemberImpl("localhost",4444,0);
         NioSender sender = new NioSender();
         sender.setDestination(mbr);
@@ -93,9 +88,9 @@ public class NioSenderTest {
                 continue;
             }
 
-            Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+            Iterator it = selector.selectedKeys().iterator();
             while (it.hasNext()) {
-                SelectionKey sk = it.next();
+                SelectionKey sk = (SelectionKey) it.next();
                 it.remove();
                 try {
                     int readyOps = sk.readyOps();
@@ -103,11 +98,11 @@ public class NioSenderTest {
                     NioSender sender = (NioSender) sk.attachment();
                     if ( sender.process(sk, (testOptions&Channel.SEND_OPTIONS_USE_ACK)==Channel.SEND_OPTIONS_USE_ACK) ) {
                         System.out.println("Message completed for handler:"+sender);
-                        Thread.sleep(2000);
+                        Thread.currentThread().sleep(2000);
                         sender.reset();
                         sender.setMessage(XByteBuffer.createDataPackage(getMessage(mbr)));
                     }
-
+                    
 
                 } catch (Throwable t) {
                     t.printStackTrace();
